@@ -1,0 +1,33 @@
+.rg-celleditor-input,
+.rg-celleditor input {
+    border: none;
+}
+
+.reactgrid {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+}
+
+.rg-pane.rg-pane-top {
+    font-weight: bold;
+}
+
+.rg-pane.rg-pane-top>.rg-cell:nth-of-type(odd) {
+    background-color: #99ffcc !important;
+}
+
+.rg-pane.rg-pane-top>.rg-cell:nth-of-type(even) {
+    background-color: #009999 !important;
+}
+
+.rg-pane.rg-pane-top>.rg-cell:first-of-type {
+    background-color: inherit !important;
+}
+
+.rg-pane.rg-pane-top>.rg-cell:nth-child(2) {
+    background-color: yellow !important;
+}
+
+.rg-pane.rg-pane-top>.rg-cell:nth-child(3) {
+    background-color: yellow !important;
+}
