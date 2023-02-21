@@ -1,14 +1,85 @@
-import { Autocomplete, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
+import { Autocomplete, Button, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { useEffect, useState } from "react";
-import { Size } from "./common/Size";
+import { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
+import { Size } from "./common/Size.d";
+
+let itemSizes: number[][] = [];
+let itemStocks: number[][] = [];
+
+const init2DArray = (rowLength: number, columnLength: number): number[][] => {
+    let newArray: number[][] = [];
+    let dummyToClone: number[] = [];
+
+    while (columnLength--) dummyToClone.push(0);
+    while (rowLength--) newArray.push(dummyToClone.slice(0));
+
+    return newArray;
+};
 
 const ProductDescriptionPanel = (props: any) => {
     const [size, setSize] = useState("0");
     const [sizeList, setSizeList] = useState<Size[]>([Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6]);
+    const [itemList, setItemList] = useState<string[]>([]);
+    const [colorList, setColorList] = useState<string[]>([]);
+    const [productDescriptionToCopy, setProductDescriptionToCopy] = useState("");
+    const [productVariationToCopy, setProductVariationToCopy] = useState("");
 
     const handleSize = (event: SelectChangeEvent) => {
         setSize(event.target.value);
+    };
+
+    const handleItemList = (_event: SyntheticEvent, newValue: string[]) => {
+        setItemList(newValue);
+        itemSizes = init2DArray(sizeList.length, newValue.length);
+    };
+
+    const handleColorList = (_event: SyntheticEvent, newValue: string[]) => {
+        setColorList(newValue);
+        itemStocks = init2DArray(newValue.length, sizeList.length);
+    };
+
+    const handleItemSize = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        const split = e.target.id.split("_");
+        const sizeIndex = parseInt(split[1]);
+        const itemIndex = parseInt(split[2]);
+
+        itemSizes[sizeIndex][itemIndex] = parseInt(e.target.value);
+    };
+
+    const handleItemStocks = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        const split = e.target.id.split("_");
+        const sizeIndex = parseInt(split[1]);
+        const colorIndex = parseInt(split[2]);
+
+        itemStocks[sizeIndex][colorIndex] = parseInt(e.target.value);
+    };
+
+    const handleSubmit = () => {
+        // TODO: TheBase API
+        setProductDescriptionToCopy((prevText) => {
+            prevText = `色展開\t${colorList.join("\t")}\n\n
+            サイズ\t${sizeList.join("\t")}\n\n
+            サイズ(cm)`;
+            sizeList.forEach((size, idx) => {
+                let newLine = "";
+                itemList.forEach((item, jdx) => {
+                    if (itemSizes[idx][jdx] !== 0) newLine += `\t${item}\t${itemSizes[idx][jdx]}`;
+                });
+                if (newLine !== "") prevText += `\n${size + newLine}`;
+            });
+            return prevText;
+        });
+        setProductVariationToCopy((prevText) => {
+            prevText = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
+            colorList.forEach((color, idx) => {
+                let newLine = "";
+                sizeList.forEach((size, jdx) => {
+                    if (itemStocks[idx][jdx] !== 0) newLine += `\t${color}　サイズ ${size}\t${itemStocks[idx][jdx]}`;
+                });
+                if (newLine !== "") prevText += `\n${newLine}`;
+            });
+            return prevText;
+        });
     };
 
     useEffect(() => {
@@ -77,6 +148,8 @@ const ProductDescriptionPanel = (props: any) => {
                             "裾丈",
                             "ズボン丈",
                         ]}
+                        value={itemList}
+                        onChange={handleItemList}
                         getOptionLabel={(option) => option || ""}
                         filterSelectedOptions
                         renderInput={(params) => <TextField {...params} />}
@@ -136,16 +209,66 @@ const ProductDescriptionPanel = (props: any) => {
                             "メタリック",
                             "アプリコット",
                         ]}
+                        value={colorList}
+                        onChange={handleColorList}
                         getOptionLabel={(option) => option || ""}
                         filterSelectedOptions
                         renderInput={(params) => <TextField {...params} />}
                     />
                 </Grid>
                 <Grid item xs={12}>
+                    サイズ(cm)
+                </Grid>
+                {sizeList.map((size, idx) => (
+                    <Grid key={idx} item display={"flex"} xs={12}>
+                        <Grid item xs={2}>
+                            {size}
+                        </Grid>
+
+                        <Grid item xs={10}>
+                            {itemList.map((item, jdx) => (
+                                <TextField
+                                    key={jdx}
+                                    id={"item_" + idx + "_" + jdx}
+                                    size="small"
+                                    sx={{ mb: 1, mr: 1 }}
+                                    label={item}
+                                    type="number"
+                                    onChange={handleItemSize}
+                                />
+                            ))}
+                        </Grid>
+                    </Grid>
+                ))}
+                <Grid item xs={12}>
+                    バリエーション
+                </Grid>
+                {sizeList.map((size, idx) => (
+                    <Grid key={idx} item display={"flex"} xs={12}>
+                        {colorList.map((color, jdx) => (
+                            <TextField
+                                key={jdx}
+                                id={"color_" + jdx + "_" + idx}
+                                size="small"
+                                sx={{ mb: 1, mr: 1 }}
+                                label={color + "　サイズ " + size}
+                                type="number"
+                                onChange={handleItemStocks}
+                            />
+                        ))}
+                    </Grid>
+                ))}
+                <Grid item xs={12}>
                     商品説明
                 </Grid>
                 <Grid item xs={12}>
-                    {sizeList}
+                    <p>{productDescriptionToCopy}</p>
+                    <p>{productVariationToCopy}</p>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button variant="contained" onClick={handleSubmit}>
+                        Submit
+                    </Button>
                 </Grid>
             </Grid>
         </>
