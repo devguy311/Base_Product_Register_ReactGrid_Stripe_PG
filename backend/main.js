@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const sqlite3 = require("sqlite3").verbose();
+const axios = require("axios");
 
 const app = express();
 
@@ -8,108 +9,10 @@ const db = new sqlite3.Database("./db/data.sqlite");
 
 const init = () => {
     db.parallelize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS apparel
+        db.run(`CREATE TABLE IF NOT EXISTS descriptions
             (
-                freeEntry       VARCHAR(20),
-                big             VARCHAR(20),
-                medium          VARCHAR(20),
-                small           VARCHAR(20),
-                height          VARCHAR(20),
-                sleeve          VARCHAR(20),
-                neck            VARCHAR(20),
-                shape           VARCHAR(20),
-                design          VARCHAR(20),
-                material        VARCHAR(20),
-                'set'           VARCHAR(20),
-                image           VARCHAR(20),
-                pattern         VARCHAR(20),
-                seasonOrEvent   VARCHAR(20),
-                ageOrSex        VARCHAR(20),
-                place           VARCHAR(20),
-                others          VARCHAR(20),
-                size            VARCHAR(20),
-                color           VARCHAR(20)
-            )
-        `);
-
-        db.run(`CREATE TABLE IF NOT EXISTS shoes
-            (
-                freeEntry       VARCHAR(20),
-                big             VARCHAR(20),
-                medium          VARCHAR(20),
-                heel            VARCHAR(20),
-                designOrShape   VARCHAR(20),
-                material        VARCHAR(20),
-                image           VARCHAR(20),
-                pattern         VARCHAR(20),
-                seasonOrEvent   VARCHAR(20),
-                ageOrSex        VARCHAR(20),
-                place           VARCHAR(20),
-                others          VARCHAR(20),
-                size            VARCHAR(20),
-                color           VARCHAR(20)
-            )
-        `);
-
-        db.run(`CREATE TABLE IF NOT EXISTS bag_wallet
-            (
-                freeEntry       VARCHAR(20),
-                big             VARCHAR(20),
-                mediumBag       VARCHAR(20),
-                mediumWallet    VARCHAR(20),
-                functionBag     VARCHAR(20),
-                functionWallet  VARCHAR(20),
-                designOrShape   VARCHAR(20),
-                material        VARCHAR(20),
-                image           VARCHAR(20),
-                pattern         VARCHAR(20),
-                ageOrSex        VARCHAR(20),
-                place           VARCHAR(20),
-                others          VARCHAR(20),
-                seasonOrEvent   VARCHAR(20),
-                size            VARCHAR(20),
-                color           VARCHAR(20)
-            )
-        `);
-
-        db.run(`CREATE TABLE IF NOT EXISTS dress
-            (
-                freeEntry       VARCHAR(20),
-                big             VARCHAR(20),
-                medium          VARCHAR(20),
-                height          VARCHAR(20),
-                sleeve          VARCHAR(20),
-                neck            VARCHAR(20),
-                shape           VARCHAR(20),
-                design          VARCHAR(20),
-                material1       VARCHAR(20),
-                material2       VARCHAR(20),
-                image           VARCHAR(20),
-                pattern1        VARCHAR(20),
-                pattern2        VARCHAR(20),
-                ageOrSex        VARCHAR(20),
-                place           VARCHAR(20),
-                others          VARCHAR(20),
-                seasonOrEvent   VARCHAR(20),
-                size            VARCHAR(20),
-                color           VARCHAR(20)
-            )
-        `);
-
-        db.run(`CREATE TABLE IF NOT EXISTS swimsuit
-            (
-                freeEntry       VARCHAR(20),
-                big             VARCHAR(20),
-                medium          VARCHAR(20),
-                shape           VARCHAR(20),
-                design          VARCHAR(20),
-                'set'           VARCHAR(20),
-                image           VARCHAR(20),
-                pattern         VARCHAR(20),
-                ageOrSex        VARCHAR(20),
-                others          VARCHAR(20),
-                size            VARCHAR(20),
-                color           VARCHAR(20)
+                header          VARCHAR(50),
+                keywords        VARCHAR(1000)
             )
         `);
     });
@@ -120,124 +23,88 @@ init();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.get("/apparel", (req, res) => {
-    db.all("SELECT * FROM apparel", (error, rows) => {
+app.get("/descriptions", (req, res) => {
+    db.all("SELECT * FROM descriptions", (error, rows) => {
         if (error) return res.status(404).json({ error });
-        res.json({ apparel: rows });
+        res.json({ descriptions: rows });
     });
 });
 
-app.post("/apparel", (req, res) => {
+app.post("/descriptions", (req, res) => {
     const data = req.body.data;
-    db.run("DELETE FROM apparel", (error) => {
+    db.run("DELETE FROM descriptions", (error) => {
         if (error) return res.status(400).json({ error });
         if (data.length === 0) return res.json({ saved: true });
-        db.run(
-            `INSERT INTO apparel(
-                freeEntry, big, medium, small, height, sleeve, neck, shape, design, material, 'set', image, pattern, seasonOrEvent, ageOrSex, place, others, size, color
-                ) VALUES ${data.map((t) => `(${t.map((s) => `'${s}'`).join(",")})`).join(",")}`,
-            (error) => {
-                if (error) return res.status(400).json({ error });
-                res.json({ saved: true });
-            }
-        );
+        db.run(`INSERT INTO descriptions(header, keywords) VALUES ${data.map((t) => `('${t.header}', '${t.keywords.join(",")}')`)}`, (error) => {
+            if (error) return res.status(400).json({ error });
+            res.json({ saved: true });
+        });
     });
 });
 
-app.get("/shoes", (req, res) => {
-    db.all("SELECT * FROM shoes", (error, rows) => {
-        if (error) return res.status(404).json({ error });
-        res.json({ shoes: rows });
-    });
-});
-
-app.post("/shoes", (req, res) => {
-    const data = req.body.data;
-    db.run("DELETE FROM shoes", (error) => {
-        if (error) return res.status(400).json({ error });
-        if (data.length === 0) return res.json({ saved: true });
-        db.run(
-            `INSERT INTO shoes(
-                freeEntry, big, medium, heel, designOrShape, material, image, pattern, seasonOrEvent, ageOrSex, place, others, size, color
-                ) VALUES ${data.map((t) => `(${t.map((s) => `'${s}'`).join(",")})`).join(",")}`,
-            (error) => {
-                if (error) return res.status(400).json({ error });
-                res.json({ saved: true });
-            }
-        );
-    });
-});
-
-app.get("/bag-wallet", (req, res) => {
-    db.all("SELECT * FROM bag_wallet", (error, rows) => {
-        if (error) return res.status(404).json({ error });
-        res.json({ bagWallet: rows });
-    });
-});
-
-app.post("/bag-wallet", (req, res) => {
-    const data = req.body.data;
-    db.run("DELETE FROM bag_wallet", (error) => {
-        if (error) return res.status(400).json({ error });
-        if (data.length === 0) return res.json({ saved: true });
-        db.run(
-            `INSERT INTO bag_wallet(
-                freeEntry, big, mediumBag, mediumWallet, functionBag, functionWallet, designOrShape, material, image, pattern, ageOrSex, place, others, seasonOrEvent, size, color
-                ) VALUES ${data.map((t) => `(${t.map((s) => `'${s}'`).join(",")})`).join(",")}`,
-            (error) => {
-                if (error) return res.status(400).json({ error });
-                res.json({ saved: true });
-            }
-        );
-    });
-});
-
-app.get("/dress", (req, res) => {
-    db.all("SELECT * FROM dress", (error, rows) => {
-        if (error) return res.status(404).json({ error });
-        res.json({ dress: rows });
-    });
-});
-
-app.post("/dress", (req, res) => {
-    const data = req.body.data;
-    db.run("DELETE FROM dress", (error) => {
-        if (error) return res.status(400).json({ error });
-        if (data.length === 0) return res.json({ saved: true });
-        db.run(
-            `INSERT INTO dress(
-                freeEntry, big, medium, height, sleeve, neck, shape, design, material1, material2, image, pattern1, pattern2, ageOrSex, place, others, seasonOrEvent, size, color
-                ) VALUES ${data.map((t) => `(${t.map((s) => `'${s}'`).join(",")})`).join(",")}`,
-            (error) => {
-                if (error) return res.status(400).json({ error });
-                res.json({ saved: true });
-            }
-        );
-    });
-});
-
-app.get("/swimsuit", (req, res) => {
-    db.all("SELECT * FROM swimsuit", (error, rows) => {
-        if (error) return res.status(404).json({ error });
-        res.json({ swimsuit: rows });
-    });
-});
-
-app.post("/swimsuit", (req, res) => {
-    const data = req.body.data;
-    db.run("DELETE FROM swimsuit", (error) => {
-        if (error) return res.status(400).json({ error });
-        if (data.length === 0) return res.json({ saved: true });
-        db.run(
-            `INSERT INTO swimsuit(
-                freeEntry, big, medium, shape, design, 'set', image, pattern, ageOrSex, others, size, color
-                ) VALUES ${data.map((t) => `(${t.map((s) => `'${s}'`).join(",")})`).join(",")}`,
-            (error) => {
-                if (error) return res.status(400).json({ error });
-                res.json({ saved: true });
-            }
-        );
-    });
+app.post("/credentials", (req, res) => {
+    const accessToken = req.body.data.accessToken;
+    const refreshToken = req.body.data.refreshToken;
+    const authorizationCode = req.body.data.authorizationCode;
+    axios
+        .get("https://api.thebase.in/1/users/me", {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+        .then(() => {
+            return res.status(200).json({
+                /*result: "success"*/
+            });
+        })
+        .catch(() => {
+            axios
+                .post(
+                    "https://api.thebase.in/1/oauth/token",
+                    {},
+                    {
+                        params: {
+                            grant_type: "refresh_token",
+                            client_id: "6cd00fb8ffcab2dec0d1f10f7096b697",
+                            client_secret: "1155fba3aa930f860d3436b84fbc06d0",
+                            refresh_token: refreshToken,
+                            redirect_uri: "http://localhost:3000/redirect",
+                        },
+                    }
+                )
+                .then((response) => {
+                    return res
+                        .status(201)
+                        .json({ /*refresh_type: "token",*/ accessToken: response.data.access_token, refreshToken: response.data.refresh_token });
+                })
+                .catch(() => {
+                    axios
+                        .post(
+                            "https://api.thebase.in/1/oauth/token",
+                            {},
+                            {
+                                params: {
+                                    grant_type: "authorization_code",
+                                    client_id: "6cd00fb8ffcab2dec0d1f10f7096b697",
+                                    client_secret: "1155fba3aa930f860d3436b84fbc06d0",
+                                    code: authorizationCode,
+                                    redirect_uri: "http://localhost:3000/redirect",
+                                },
+                            }
+                        )
+                        .then((response) => {
+                            return res.status(201).json({
+                                /*refresh_type: "authorization_code",*/ accessToken: response.data.access_token,
+                                refreshToken: response.data.refresh_token,
+                            });
+                        })
+                        .catch((error) => {
+                            res.status(400).json({
+                                /*result: "failure"*/
+                            });
+                        });
+                });
+        });
 });
 
 app.listen(5000, () => {

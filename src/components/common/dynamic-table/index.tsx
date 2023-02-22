@@ -2,13 +2,14 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 import Papa from "papaparse";
 import { CSVLink } from "react-csv";
 import { ReactGrid, Column, Row, CellChange, SelectionMode, Id, MenuOption, TextCell } from "@silevis/reactgrid";
-import { Button } from "@mui/material";
-import { Download, RefreshRounded, Upload } from "@mui/icons-material";
+import { Button, IconButton } from "@mui/material";
+import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
 import CopyToClipboardButton from "./components/CopyToClipboardButton";
 import { ProductKeyword } from "./components/ProductKeyword";
 import { CheckboxData } from "./components/DynamicTable";
+import axios from "axios";
 
 const getData = (source: ProductKeyword[]): CheckboxData[][] => {
     let data: CheckboxData[][] = [];
@@ -84,6 +85,8 @@ const getRows = (data: CheckboxData[][]): Row[] => [
 ];
 
 const DynamicTable = (props: any) => {
+    const [file, setFile] = useState<File>();
+    const [isSaving, setIsSaving] = useState(false);
     const [header, setHeader] = useState<Row>(getHeader((props.source as ProductKeyword[]) || []));
     const [footer, setFooter] = useState<Row>(getFooter((props.source as ProductKeyword[]) || []));
     const [data, setData] = useState<CheckboxData[][]>(getData((props.source as ProductKeyword[]) || []));
@@ -91,6 +94,39 @@ const DynamicTable = (props: any) => {
     const [textToCopy, setTextToCopy] = useState("");
     const [cellChangesIndex, setCellChangesIndex] = useState(() => -1);
     const [cellChanges, setCellChanges] = useState<CellChange[][]>(() => []);
+
+    const getFromData = (): ProductKeyword[] => {
+        let source: ProductKeyword[] = [];
+        data.forEach((t, idx) =>
+            t.forEach((t, jdx) => {
+                if (idx === 0) source.push({ header: (header.cells[jdx * 2 + 2] as TextCell).text, keywords: [t.text] });
+                else source[jdx].keywords.push(t.text);
+            })
+        );
+        return source;
+    };
+
+    const loadFromSource = (source: ProductKeyword[]) => {
+        setHeader(getHeader(source));
+        setFooter(getFooter(source));
+        setData(getData(source));
+        setColumns(getColumns(source));
+    };
+
+    const loadFromFile = (file: File) => {
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function (results) {
+                let loadedData: ProductKeyword[] = [];
+                (results.data as any[]).forEach((t) => {
+                    const values = Object.values<string>(t);
+                    loadedData.push({ header: values[0], keywords: values[1].split(",") });
+                });
+                loadFromSource(loadedData);
+            },
+        });
+    };
 
     const applyNewValue = (changes: CellChange[], prevData: CheckboxData[][], usePrevValue: boolean = false): CheckboxData[][] => {
         changes.forEach((change) => {
@@ -197,29 +233,55 @@ const DynamicTable = (props: any) => {
     const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const files = (e.target as HTMLInputElement).files;
         if (files !== undefined && files !== null && files.length > 0) {
-            Papa.parse(files[0], {
-                header: true,
-                skipEmptyLines: true,
-                complete: function (results) {
-                    let loadedData: ProductKeyword[] = [];
-                    (results.data as any[]).forEach((t) => {
-                        const values = Object.values<string>(t);
-                        loadedData.push({ header: values[0], keywords: values[1].split(",") });
-                    });
-                    setHeader(getHeader(loadedData));
-                    setFooter(getFooter(loadedData));
-                    setData(getData(loadedData));
-                    setColumns(getColumns(loadedData));
-                },
-            });
+            loadFromFile(files[0]);
+            setFile(files[0]);
         }
         e.target.value = "";
+    };
+
+    const handleSave = () => {
+        setIsSaving(true);
+        axios
+            .post("/descriptions", {
+                data: getFromData(),
+            })
+            .then((response) => {
+                if (response.data.saved) console.log("保存した");
+                else console.warn("保存 失敗しま");
+            })
+            .catch(() => {
+                console.error("おっと");
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
+    };
+
+    const handleDiscard = () => {
+        if (file === undefined) loadFromSource(props.source);
+        else loadFromFile(file);
     };
 
     const handleContextMenu = (selectedRowIds: Id[], selectedColIds: Id[], selectionMode: SelectionMode, menuOptions: MenuOption[]): MenuOption[] => {
         if (selectionMode === "row") {
             menuOptions = [
                 // ...menuOptions,
+                {
+                    id: "insertRow",
+                    label: "行挿入",
+                    handler: () => {
+                        setData((prevData) => {
+                            let newRow: CheckboxData[] = [];
+                            for (let i = 2; i < header.cells.length; i += 2) newRow.push({ checked: false, text: "" });
+
+                            if (selectedRowIds[0].valueOf() === "footer") prevData.push(newRow);
+                            else prevData.splice(selectedRowIds[0].valueOf() as number, 0, newRow);
+                            return prevData;
+                        });
+                        setCellChanges([]);
+                        setCellChangesIndex(-1);
+                    },
+                },
                 {
                     id: "removeRow",
                     label: "行削材",
@@ -322,12 +384,14 @@ const DynamicTable = (props: any) => {
                 if (t.checked) texts[jdx] += t.text + "　";
             })
         );
-        setTextToCopy(
-            texts
-                .map((t) => t.trimEnd())
-                .join("　")
-                .trimEnd()
-        );
+        setTextToCopy((prevTextToCopy) => {
+            prevTextToCopy = "";
+            texts.forEach((t) => {
+                t = t.trimEnd();
+                if (t !== "") prevTextToCopy += t + "　";
+            });
+            return prevTextToCopy.trim();
+        });
     }, [data]);
 
     return (
@@ -359,7 +423,7 @@ const DynamicTable = (props: any) => {
                             { label: "ヘッダ", key: "header" },
                             { label: "キーワード", key: "keywords" },
                         ]}
-                        data={(props.source as ProductKeyword[]) || []}
+                        data={getFromData()}
                         filename="Lumina.csv"
                         style={{ textDecorationLine: "none", WebkitTextDecorationLine: "none" }}
                     >
@@ -372,6 +436,13 @@ const DynamicTable = (props: any) => {
                         <Upload /> CSVロード
                         <input hidden type="file" accept=".csv" onChange={handleFileUpload} />
                     </Button>
+
+                    <IconButton sx={{ mb: 1 }} onClick={handleSave} disabled={isSaving}>
+                        <Backup color={!isSaving ? "primary" : "inherit"} />
+                    </IconButton>
+                    <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
+                        <ReplayRounded color="primary" />
+                    </IconButton>
                 </div>
                 <ReactGrid
                     rows={[header, ...getRows(data), footer]}
