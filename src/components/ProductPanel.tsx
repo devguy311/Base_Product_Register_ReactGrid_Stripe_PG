@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import LinearProgress from "@mui/material/LinearProgress";
 
 import DynamicTable from "./common/dynamic-table";
 import { LoadingStatus } from "./common/LoadingStatus.d";
 import { ProductKeyword } from "./common/dynamic-table/components/ProductKeyword";
-import LinearProgress from "@mui/material/LinearProgress";
 
-const LuminaPanel = () => {
+const ProductPanel = () => {
     const [data, setData] = useState<ProductKeyword[]>([]);
     const [loadingStatus, setLoadingStatus] = useState(LoadingStatus.LOADING);
 
@@ -30,4 +30,4 @@ const LuminaPanel = () => {
     );
 };
 
-export default LuminaPanel;
+export default ProductPanel;

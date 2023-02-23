@@ -17,9 +17,13 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
+import axios from "axios";
 
 import { Size } from "./common/Size.d";
 import { SavingStatus } from "./common/SavingStatus.d";
+import useToken from "../hooks/useToken";
+import useAuthorizationCode from "../hooks/useAuthorizationCode";
+import { ProductVariation } from "./common/ProductVariation.d";
 
 const init2DArray = (rowLength: number, columnLength: number): number[][] => {
     let newArray: number[][] = [];
@@ -32,6 +36,8 @@ const init2DArray = (rowLength: number, columnLength: number): number[][] => {
 };
 
 const ProductDescriptionPanel = (props: any) => {
+    const { token, setToken } = useToken();
+    const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
     const [size, setSize] = useState("0");
     const [activeStep, setActiveStep] = useState(0);
     const [sizeList, setSizeList] = useState<Size[]>([Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6]);
@@ -40,16 +46,14 @@ const ProductDescriptionPanel = (props: any) => {
     const [itemSizes, setItemSizes] = useState<number[][]>([]);
     const [itemStocks, setItemStocks] = useState<number[][]>([]);
     const [productDescriptionToCopy, setProductDescriptionToCopy] = useState("");
-    const [productVariationToCopy, setProductVariationToCopy] = useState("");
+    const [productVariations, setProductVariations] = useState<ProductVariation[]>([]);
     const [savingStatus, setSavingStatus] = useState(SavingStatus.NOT_SAVING);
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => {
             if (prevActiveStep === 1) {
                 setProductDescriptionToCopy((prevText) => {
-                    prevText = `色展開\t${colorList.join("\t")}\n\n
-            サイズ\t${sizeList.join("\t")}\n\n
-            サイズ(cm)`;
+                    prevText = `色展開\t${colorList.join("\t")}\n\nサイズ\t${sizeList.join("\t")}\n\nサイズ(cm)`;
                     sizeList.forEach((size, idx) => {
                         let newLine = "";
                         itemList.forEach((item, jdx) => {
@@ -59,16 +63,14 @@ const ProductDescriptionPanel = (props: any) => {
                     });
                     return prevText;
                 });
-                setProductVariationToCopy((prevText) => {
-                    prevText = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`;
+                setProductVariations((prevList) => {
+                    prevList = [];
                     colorList.forEach((color, idx) => {
-                        let newLine = "";
                         sizeList.forEach((size, jdx) => {
-                            if (itemStocks[idx][jdx] !== 0) newLine += `\t${color}　サイズ ${size}\t${itemStocks[idx][jdx]}`;
+                            if (itemStocks[idx][jdx] !== 0) prevList.push({ name: `${color}　${size}`, stock: itemStocks[idx][jdx] });
                         });
-                        if (newLine !== "") prevText += `\n${newLine}`;
                     });
-                    return prevText;
+                    return prevList;
                 });
             }
 
@@ -102,10 +104,10 @@ const ProductDescriptionPanel = (props: any) => {
         const split = e.target.id.split("_");
         const sizeIndex = parseInt(split[1]);
         const itemIndex = parseInt(split[2]);
+        const newValue = parseInt(e.target.value);
 
         const newItemSizes = itemSizes.slice();
-        newItemSizes[sizeIndex][itemIndex] = parseInt(e.target.value);
-        console.log(newItemSizes);
+        newItemSizes[sizeIndex][itemIndex] = isNaN(newValue) ? 0 : newValue;
         setItemSizes(newItemSizes);
     };
 
@@ -113,16 +115,44 @@ const ProductDescriptionPanel = (props: any) => {
         const split = e.target.id.split("_");
         const sizeIndex = parseInt(split[1]);
         const colorIndex = parseInt(split[2]);
+        const newValue = parseInt(e.target.value);
 
         const newItemStocks = itemStocks.slice();
-        newItemStocks[sizeIndex][colorIndex] = parseInt(e.target.value);
+        newItemStocks[sizeIndex][colorIndex] = isNaN(newValue) ? 0 : newValue;
         setItemStocks(newItemStocks);
     };
 
     const handleSubmit = () => {
-        // TODO: TheBase API
         setActiveStep(activeStep + 1);
         setSavingStatus(SavingStatus.SAVING);
+
+        let accessToken = token[0];
+        axios
+            .post("/credentials", {
+                accessToken,
+                refreshToken: token[1],
+                authorizationCode,
+            })
+            .then((response) => {
+                if (response.status === 201) {
+                    setToken([response.data.accessToken, response.data.refreshToken]);
+                    accessToken = response.data.accessToken;
+                }
+                axios
+                    .post("/product", {
+                        accessToken,
+                        title: props.productName,
+                        detail: productDescriptionToCopy,
+                        variations: productVariations,
+                    })
+                    .then(() => setSavingStatus(SavingStatus.SAVED))
+                    .catch(() => setSavingStatus(SavingStatus.NOT_SAVED));
+            })
+            .catch(() => {
+                setAuthorizationCode(undefined);
+                setToken([undefined, undefined]);
+                window.location.reload();
+            });
     };
 
     useEffect(() => {
@@ -314,7 +344,7 @@ const ProductDescriptionPanel = (props: any) => {
                                             size="small"
                                             sx={{ mb: 1, mr: 1 }}
                                             value={itemStocks[jdx][idx]}
-                                            label={color + "　サイズ " + size}
+                                            label={color + "　" + size}
                                             type="number"
                                             onChange={handleItemStocks}
                                         />
@@ -343,7 +373,7 @@ const ProductDescriptionPanel = (props: any) => {
                             </Grid>
                             <Grid item xs={12}>
                                 <p>{productDescriptionToCopy}</p>
-                                <p>{productVariationToCopy}</p>
+                                <p>{productVariations.map((t) => `${t.name}\t${t.stock}`).join("\t")}</p>
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>

@@ -1,4 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
+import axios from "axios";
 import Papa from "papaparse";
 import { CSVLink } from "react-csv";
 import { ReactGrid, Column, Row, CellChange, SelectionMode, Id, MenuOption, TextCell } from "@silevis/reactgrid";
@@ -6,10 +7,10 @@ import { Button, IconButton } from "@mui/material";
 import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
-import CopyToClipboardButton from "./components/CopyToClipboardButton";
 import { ProductKeyword } from "./components/ProductKeyword";
 import { CheckboxData } from "./components/DynamicTable";
-import axios from "axios";
+import CopyToClipboardButton from "./components/CopyToClipboardButton";
+import AddProductDialog from "./components/AddProductDialog";
 
 const getData = (source: ProductKeyword[]): CheckboxData[][] => {
     let data: CheckboxData[][] = [];
@@ -411,6 +412,7 @@ const DynamicTable = (props: any) => {
         >
             <div>
                 新商品説明→ {textToCopy} <CopyToClipboardButton textToCopy={textToCopy} disabled={textToCopy === ""} />
+                <AddProductDialog name={textToCopy} hidden={textToCopy === ""} />
             </div>
             <div>
                 <Button variant="outlined" size="small" sx={{ mb: 1, mr: 1 }} startIcon={<RefreshRounded />} onClick={handleReset}>

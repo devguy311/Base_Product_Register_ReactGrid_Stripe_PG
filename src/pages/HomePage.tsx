@@ -2,13 +2,13 @@ import React, { SyntheticEvent, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import { Link } from "@mui/material";
+import { Backdrop, CircularProgress, Link } from "@mui/material";
 import axios from "axios";
 
-import ProductDescriptionPanel from "../components/ProductDescriptionPanel";
-import LuminaPanel from "../components/LuminaPanel";
+import ProductPanel from "../components/ProductPanel";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
+import { LoadingStatus } from "../components/common/LoadingStatus.d";
 
 const a11yProps = (index: number) => {
     return {
@@ -18,7 +18,8 @@ const a11yProps = (index: number) => {
 };
 
 const HomePage = () => {
-    const [tabIndex, setTabIndex] = useState(1);
+    const [loadingStatus, setLoadingStatus] = useState(LoadingStatus.LOADING);
+    const [tabIndex, setTabIndex] = useState(0);
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
 
@@ -29,11 +30,9 @@ const HomePage = () => {
     useEffect(() => {
         axios
             .post("/credentials", {
-                data: {
-                    accessToken: token[0],
-                    refreshToken: token[1],
-                    authorizationCode,
-                },
+                accessToken: token[0],
+                refreshToken: token[1],
+                authorizationCode,
             })
             .then((response) => {
                 if (response.status === 201) setToken([response.data.accessToken, response.data.refreshToken]);
@@ -41,29 +40,33 @@ const HomePage = () => {
             .catch(() => {
                 setAuthorizationCode(undefined);
                 setToken([undefined, undefined]);
-            });
+            })
+            .finally(() => setLoadingStatus(LoadingStatus.LOADED));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
         <>
-            {token[0] === undefined && (
+            {loadingStatus === LoadingStatus.LOADING && (
+                <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+            )}
+            {loadingStatus === LoadingStatus.LOADED && token[0] === undefined && (
                 <Link
-                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=6cd00fb8ffcab2dec0d1f10f7096b697&redirect_uri=http://localhost:3000/redirect`}
+                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=6cd00fb8ffcab2dec0d1f10f7096b697&redirect_uri=http://localhost:3000/redirect&scope=write_items`}
                 >
                     認可する
                 </Link>
             )}
-            {token[0] !== undefined && (
+            {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && (
                 <>
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
-                            <Tab label="Lumina" {...a11yProps(0)} />
-                            <Tab label="商品説明テンプレ" {...a11yProps(1)} />
+                            <Tab label="サンプル" {...a11yProps(0)} />
                         </Tabs>
                     </Box>
-                    {tabIndex === 0 && <LuminaPanel />}
-                    {tabIndex === 1 && <ProductDescriptionPanel productName="にょ天狗" />}
+                    {tabIndex === 0 && <ProductPanel />}
                 </>
             )}
         </>

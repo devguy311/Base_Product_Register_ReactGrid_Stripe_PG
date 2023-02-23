@@ -43,9 +43,9 @@ app.post("/descriptions", (req, res) => {
 });
 
 app.post("/credentials", (req, res) => {
-    const accessToken = req.body.data.accessToken;
-    const refreshToken = req.body.data.refreshToken;
-    const authorizationCode = req.body.data.authorizationCode;
+    const accessToken = req.body.accessToken;
+    const refreshToken = req.body.refreshToken;
+    const authorizationCode = req.body.authorizationCode;
     axios
         .get("https://api.thebase.in/1/users/me", {
             headers: {
@@ -98,12 +98,49 @@ app.post("/credentials", (req, res) => {
                                 refreshToken: response.data.refresh_token,
                             });
                         })
-                        .catch((error) => {
+                        .catch(() => {
                             res.status(400).json({
                                 /*result: "failure"*/
                             });
                         });
                 });
+        });
+});
+
+app.post("/product", (req, res) => {
+    const variationObject = {};
+    req.body.variations.forEach((t, idx) => {
+        variationObject[`variation[${idx}]`] = t.name;
+        variationObject[`variation_stock[${idx}]`] = t.stock;
+    });
+
+    axios
+        .post(
+            "https://api.thebase.in/1/items/add",
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${req.body.accessToken}`,
+                },
+                params: {
+                    title: req.body.title,
+                    detail: req.body.detail,
+                    price: 50,
+                    stock: 0,
+                    visible: 0,
+                    ...variationObject,
+                },
+            }
+        )
+        .then(() => {
+            return res.json({
+                /*result: "success"*/
+            });
+        })
+        .catch((error) => {
+            return res.status(400).json({
+                /*result: "failure"*/
+            });
         });
 });
 
