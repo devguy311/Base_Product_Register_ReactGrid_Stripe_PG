@@ -2,14 +2,13 @@ import React, { SyntheticEvent, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import { Link } from "@mui/material";
+import axios from "axios";
 
 import ProductDescriptionPanel from "../components/ProductDescriptionPanel";
 import LuminaPanel from "../components/LuminaPanel";
-import VerticalLinearStepper from "../components/VerticalLinearStepper";
-import { Link } from "@mui/material";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
-import axios from "axios";
 
 const a11yProps = (index: number) => {
     return {
@@ -19,7 +18,7 @@ const a11yProps = (index: number) => {
 };
 
 const HomePage = () => {
-    const [tabIndex, setTabIndex] = useState(0);
+    const [tabIndex, setTabIndex] = useState(1);
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
 
@@ -61,12 +60,10 @@ const HomePage = () => {
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
                             <Tab label="Lumina" {...a11yProps(0)} />
                             <Tab label="商品説明テンプレ" {...a11yProps(1)} />
-                            <Tab label="Vertical Stepper" {...a11yProps(2)} />
                         </Tabs>
                     </Box>
                     {tabIndex === 0 && <LuminaPanel />}
                     {tabIndex === 1 && <ProductDescriptionPanel productName="にょ天狗" />}
-                    {tabIndex === 2 && <VerticalLinearStepper />}
                 </>
             )}
         </>

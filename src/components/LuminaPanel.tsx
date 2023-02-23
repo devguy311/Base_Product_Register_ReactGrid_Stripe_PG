@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import CircularProgress from "@mui/material/CircularProgress";
 
 import DynamicTable from "./common/dynamic-table";
 import { LoadingStatus } from "./common/LoadingStatus.d";
 import { ProductKeyword } from "./common/dynamic-table/components/ProductKeyword";
+import LinearProgress from "@mui/material/LinearProgress";
 
 const LuminaPanel = () => {
     const [data, setData] = useState<ProductKeyword[]>([]);
@@ -24,7 +24,7 @@ const LuminaPanel = () => {
 
     return (
         <>
-            {loadingStatus === LoadingStatus.LOADING && <CircularProgress />}
+            {loadingStatus === LoadingStatus.LOADING && <LinearProgress />}
             {loadingStatus === LoadingStatus.LOADED && <DynamicTable source={data} />}
         </>
     );

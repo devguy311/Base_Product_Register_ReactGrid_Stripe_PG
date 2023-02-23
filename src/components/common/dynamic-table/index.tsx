@@ -395,68 +395,66 @@ const DynamicTable = (props: any) => {
     }, [data]);
 
     return (
-        <>
-            <div
-                onKeyDown={(e) => {
-                    if ((!isMacOs() && e.ctrlKey) || e.metaKey) {
-                        switch (e.key) {
-                            case "z":
-                                handleUndoChanges();
-                                return;
-                            case "y":
-                                handleRedoChanges();
-                                return;
-                        }
+        <div
+            onKeyDown={(e) => {
+                if ((!isMacOs() && e.ctrlKey) || e.metaKey) {
+                    switch (e.key) {
+                        case "z":
+                            handleUndoChanges();
+                            return;
+                        case "y":
+                            handleRedoChanges();
+                            return;
                     }
-                }}
-            >
-                <div>
-                    新商品説明→ {textToCopy} <CopyToClipboardButton textToCopy={textToCopy} disabled={textToCopy === ""} />
-                </div>
-                <div>
-                    <Button variant="outlined" size="small" sx={{ mb: 1, mr: 1 }} startIcon={<RefreshRounded />} onClick={handleReset}>
-                        リセット
-                    </Button>
-
-                    <CSVLink
-                        headers={[
-                            { label: "ヘッダ", key: "header" },
-                            { label: "キーワード", key: "keywords" },
-                        ]}
-                        data={getFromData()}
-                        filename="Lumina.csv"
-                        style={{ textDecorationLine: "none", WebkitTextDecorationLine: "none" }}
-                    >
-                        <Button size="small" sx={{ mb: 1, mr: 1 }} variant="outlined">
-                            <Download /> CSVダウンロード
-                        </Button>
-                    </CSVLink>
-
-                    <Button size="small" sx={{ mb: 1 }} variant="outlined" component="label">
-                        <Upload /> CSVロード
-                        <input hidden type="file" accept=".csv" onChange={handleFileUpload} />
-                    </Button>
-
-                    <IconButton sx={{ mb: 1 }} onClick={handleSave} disabled={isSaving}>
-                        <Backup color={!isSaving ? "primary" : "inherit"} />
-                    </IconButton>
-                    <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
-                        <ReplayRounded color="primary" />
-                    </IconButton>
-                </div>
-                <ReactGrid
-                    rows={[header, ...getRows(data), footer]}
-                    columns={columns}
-                    stickyTopRows={1}
-                    onCellsChanged={handleChanges}
-                    onContextMenu={handleContextMenu}
-                    onColumnResized={handleColumnResize}
-                    enableRowSelection
-                    enableColumnSelection
-                    enableRangeSelection
-                />
+                }
+            }}
+        >
+            <div>
+                新商品説明→ {textToCopy} <CopyToClipboardButton textToCopy={textToCopy} disabled={textToCopy === ""} />
             </div>
-        </>
+            <div>
+                <Button variant="outlined" size="small" sx={{ mb: 1, mr: 1 }} startIcon={<RefreshRounded />} onClick={handleReset}>
+                    リセット
+                </Button>
+
+                <CSVLink
+                    headers={[
+                        { label: "ヘッダ", key: "header" },
+                        { label: "キーワード", key: "keywords" },
+                    ]}
+                    data={getFromData()}
+                    filename="Lumina.csv"
+                    style={{ textDecorationLine: "none", WebkitTextDecorationLine: "none" }}
+                >
+                    <Button size="small" sx={{ mb: 1, mr: 1 }} variant="outlined">
+                        <Download /> CSVダウンロード
+                    </Button>
+                </CSVLink>
+
+                <Button size="small" sx={{ mb: 1 }} variant="outlined" component="label">
+                    <Upload /> CSVロード
+                    <input hidden type="file" accept=".csv" onChange={handleFileUpload} />
+                </Button>
+
+                <IconButton sx={{ mb: 1 }} onClick={handleSave} disabled={isSaving}>
+                    <Backup color={!isSaving ? "primary" : "inherit"} />
+                </IconButton>
+                <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
+                    <ReplayRounded color="primary" />
+                </IconButton>
+            </div>
+            <ReactGrid
+                rows={[header, ...getRows(data), footer]}
+                columns={columns}
+                stickyTopRows={1}
+                onCellsChanged={handleChanges}
+                onContextMenu={handleContextMenu}
+                onColumnResized={handleColumnResize}
+                enableRowSelection
+                enableColumnSelection
+                enableRangeSelection
+            />
+        </div>
     );
 };
 
