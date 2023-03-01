@@ -128,7 +128,7 @@ const ProductDescriptionPanel = (props: any) => {
 
         let accessToken = token[0];
         axios
-            .post("/credentials", {
+            .post(`${process.env.REACT_APP_BACKEND_URL}/credentials`, {
                 accessToken,
                 refreshToken: token[1],
                 authorizationCode,
@@ -139,7 +139,7 @@ const ProductDescriptionPanel = (props: any) => {
                     accessToken = response.data.accessToken;
                 }
                 axios
-                    .post("/product", {
+                    .post(`${process.env.REACT_APP_BACKEND_URL}/product`, {
                         accessToken,
                         title: props.productName,
                         detail: productDescriptionToCopy,

@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 const { Pool } = require("pg");
@@ -24,6 +25,7 @@ const init = () => {
 
 init();
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -69,10 +71,10 @@ app.post("/credentials", (req, res) => {
                     {
                         params: {
                             grant_type: "refresh_token",
-                            client_id: `${process.env.REACT_APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
+                            client_id: `${process.env.CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
                             client_secret: `${process.env.CLIENT_SECRET || "1155fba3aa930f860d3436b84fbc06d0"}`,
                             refresh_token: refreshToken,
-                            redirect_uri: `${process.env.REACT_APP_URL || "http://localhost:3000"}/redirect`,
+                            redirect_uri: `${process.env.APP_URL || "http://localhost:3000"}/redirect`,
                         },
                     }
                 )
@@ -89,10 +91,10 @@ app.post("/credentials", (req, res) => {
                             {
                                 params: {
                                     grant_type: "authorization_code",
-                                    client_id: `${process.env.REACT_APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
+                                    client_id: `${process.env.APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
                                     client_secret: `${process.env.CLIENT_SECRET || "1155fba3aa930f860d3436b84fbc06d0"}`,
                                     code: authorizationCode,
-                                    redirect_uri: `${process.env.REACT_APP_URL || "http://localhost:3000"}/redirect`,
+                                    redirect_uri: `${process.env.APP_URL || "http://localhost:3000"}/redirect`,
                                 },
                             }
                         )
@@ -148,6 +150,6 @@ app.post("/product", (req, res) => {
         });
 });
 
-app.listen(5000, () => {
-    console.log(`Backend server running at port 5000`);
+app.listen(process.env.PORT || 5000, () => {
+    console.log(`Backend server running at port ${process.env.PORT || 5000}`);
 });

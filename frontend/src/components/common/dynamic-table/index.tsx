@@ -243,7 +243,7 @@ const DynamicTable = (props: any) => {
     const handleSave = () => {
         setIsSaving(true);
         axios
-            .post("/descriptions", {
+            .post(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, {
                 data: getFromData(),
             })
             .then((response) => {

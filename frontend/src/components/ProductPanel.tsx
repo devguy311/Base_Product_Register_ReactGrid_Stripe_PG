@@ -11,7 +11,7 @@ const ProductPanel = () => {
     const [loadingStatus, setLoadingStatus] = useState(LoadingStatus.LOADING);
 
     useEffect(() => {
-        axios.get("/descriptions").then((response) => {
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/descriptions`).then((response) => {
             setData(() => [
                 ...(response.data.descriptions as any[]).map((t) => {
                     const values = Object.values<string>(t);

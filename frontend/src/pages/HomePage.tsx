@@ -29,7 +29,7 @@ const HomePage = () => {
 
     useEffect(() => {
         axios
-            .post("/credentials", {
+            .post(`${process.env.REACT_APP_BACKEND_URL}/credentials`, {
                 accessToken: token[0],
                 refreshToken: token[1],
                 authorizationCode,
@@ -54,9 +54,7 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] === undefined && (
                 <Link
-                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${
-                        process.env.REACT_APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"
-                    }&redirect_uri=${process.env.REACT_APP_URL || "http://localhost:3000"}/redirect&scope=write_items`}
+                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=write_items`}
                 >
                     認可する
                 </Link>
