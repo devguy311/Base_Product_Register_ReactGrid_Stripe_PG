@@ -91,7 +91,7 @@ app.post("/credentials", (req, res) => {
                             {
                                 params: {
                                     grant_type: "authorization_code",
-                                    client_id: `${process.env.APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
+                                    client_id: `${process.env.CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
                                     client_secret: `${process.env.CLIENT_SECRET || "1155fba3aa930f860d3436b84fbc06d0"}`,
                                     code: authorizationCode,
                                     redirect_uri: `${process.env.APP_URL || "http://localhost:3000"}/redirect`,
