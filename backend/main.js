@@ -1,21 +1,25 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const sqlite3 = require("sqlite3").verbose();
 const axios = require("axios");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+    user: process.env.POSTGRES_USER || "postgres",
+    password: process.env.POSTGRES_PSW || "postgres",
+    database: process.env.POSTGRES_DB || "thebase",
+    port: process.env.POSTGRES_PORT || 5432,
+    host: process.env.POSTGRES_HOST || "localhost",
+});
 
 const app = express();
 
-const db = new sqlite3.Database("./db/data.sqlite");
-
 const init = () => {
-    db.parallelize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS descriptions
-            (
-                header          VARCHAR(50),
-                keywords        VARCHAR(1000)
-            )
-        `);
-    });
+    pool.query(`CREATE TABLE IF NOT EXISTS descriptions
+        (
+            header          VARCHAR(50),
+            keywords        VARCHAR(1000)
+        )
+    `);
 };
 
 init();
@@ -24,18 +28,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get("/descriptions", (req, res) => {
-    db.all("SELECT * FROM descriptions", (error, rows) => {
+    pool.query("SELECT * FROM descriptions", (error, result) => {
         if (error) return res.status(404).json({ error });
-        res.json({ descriptions: rows });
+        res.json({ descriptions: result.rows });
     });
 });
 
 app.post("/descriptions", (req, res) => {
     const data = req.body.data;
-    db.run("DELETE FROM descriptions", (error) => {
+    pool.query("DELETE FROM descriptions", (error) => {
         if (error) return res.status(400).json({ error });
         if (data.length === 0) return res.json({ saved: true });
-        db.run(`INSERT INTO descriptions(header, keywords) VALUES ${data.map((t) => `('${t.header}', '${t.keywords.join(",")}')`)}`, (error) => {
+        pool.query(`INSERT INTO descriptions(header, keywords) VALUES ${data.map((t) => `('${t.header}', '${t.keywords.join(",")}')`)}`, (error) => {
             if (error) return res.status(400).json({ error });
             res.json({ saved: true });
         });
@@ -65,10 +69,10 @@ app.post("/credentials", (req, res) => {
                     {
                         params: {
                             grant_type: "refresh_token",
-                            client_id: "6cd00fb8ffcab2dec0d1f10f7096b697",
-                            client_secret: "1155fba3aa930f860d3436b84fbc06d0",
+                            client_id: `${process.env.REACT_APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
+                            client_secret: `${process.env.CLIENT_SECRET || "1155fba3aa930f860d3436b84fbc06d0"}`,
                             refresh_token: refreshToken,
-                            redirect_uri: "http://localhost:3000/redirect",
+                            redirect_uri: `${process.env.REACT_APP_URL || "http://localhost:3000"}/redirect`,
                         },
                     }
                 )
@@ -85,10 +89,10 @@ app.post("/credentials", (req, res) => {
                             {
                                 params: {
                                     grant_type: "authorization_code",
-                                    client_id: "6cd00fb8ffcab2dec0d1f10f7096b697",
-                                    client_secret: "1155fba3aa930f860d3436b84fbc06d0",
+                                    client_id: `${process.env.REACT_APP_CLIENT_ID || "6cd00fb8ffcab2dec0d1f10f7096b697"}`,
+                                    client_secret: `${process.env.CLIENT_SECRET || "1155fba3aa930f860d3436b84fbc06d0"}`,
                                     code: authorizationCode,
-                                    redirect_uri: "http://localhost:3000/redirect",
+                                    redirect_uri: `${process.env.REACT_APP_URL || "http://localhost:3000"}/redirect`,
                                 },
                             }
                         )

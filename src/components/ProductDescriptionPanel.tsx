@@ -57,9 +57,9 @@ const ProductDescriptionPanel = (props: any) => {
                     sizeList.forEach((size, idx) => {
                         let newLine = "";
                         itemList.forEach((item, jdx) => {
-                            if (itemSizes[idx][jdx] !== 0) newLine += `\t/${item}\t${itemSizes[idx][jdx]}`;
+                            if (itemSizes[idx][jdx] !== 0) newLine += `\t\t/${item}\t\t${itemSizes[idx][jdx]}`;
                         });
-                        if (newLine !== "") prevText += `\n${size + newLine}`;
+                        if (newLine !== "") prevText += `\n\n${size + newLine}`;
                     });
                     return prevText;
                 });
