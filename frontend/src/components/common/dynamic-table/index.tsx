@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import axios from "axios";
-import Papa from "papaparse";
-import { CSVLink } from "react-csv";
+import { read, utils, writeFile } from "xlsx";
 import { ReactGrid, Column, Row, CellChange, SelectionMode, Id, MenuOption, TextCell } from "@silevis/reactgrid";
 import { Button, IconButton } from "@mui/material";
 import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
@@ -9,6 +8,7 @@ import "@silevis/reactgrid/styles.css";
 
 import { ProductKeyword } from "./components/ProductKeyword";
 import { CheckboxData } from "./components/DynamicTable";
+import { ExcelData } from "./components/ExcelData";
 import CopyToClipboardButton from "./components/CopyToClipboardButton";
 import AddProductDialog from "./components/AddProductDialog";
 
@@ -107,6 +107,25 @@ const DynamicTable = (props: any) => {
         return source;
     };
 
+    const getExcelHeadingFromData = (): string[] => {
+        if (data.length === 0) return [];
+        return data[0].map((_t, idx) => (header.cells[idx * 2 + 2] as TextCell).text);
+    };
+
+    const getExcelDataFromData = (): ExcelData[] => {
+        let source: ExcelData[] = [];
+        data.forEach((t, idx) =>
+            t.forEach((t, jdx) => {
+                if (jdx === 0) {
+                    let newObject: ExcelData = {};
+                    newObject["header0"] = t.text;
+                    source.push(newObject);
+                } else source[idx][`header${jdx}`] = t.text;
+            })
+        );
+        return source;
+    };
+
     const loadFromSource = (source: ProductKeyword[]) => {
         setHeader(getHeader(source));
         setFooter(getFooter(source));
@@ -115,18 +134,31 @@ const DynamicTable = (props: any) => {
     };
 
     const loadFromFile = (file: File) => {
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function (results) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const wb = read(event.target?.result);
+            const sheets = wb.SheetNames;
+
+            if (sheets.length) {
+                const result = utils.sheet_to_json(wb.Sheets[sheets[0]]);
+
                 let loadedData: ProductKeyword[] = [];
-                (results.data as any[]).forEach((t) => {
+                (result as any[]).forEach((t) => {
+                    const keys = Object.keys(t);
                     const values = Object.values<string>(t);
-                    loadedData.push({ header: values[0], keywords: values[1].split(",") });
+                    if (t.__rowNum__ === 1)
+                        keys.forEach((t, idx) => {
+                            if (t !== "__rowNum__") loadedData.push({ header: t, keywords: [values[idx]] });
+                        });
+                    else
+                        keys.forEach((t, idx) => {
+                            if (t !== "__rowNum__") loadedData[idx].keywords.push(values[idx]);
+                        });
                 });
                 loadFromSource(loadedData);
-            },
-        });
+            }
+        };
+        reader.readAsArrayBuffer(file);
     };
 
     const applyNewValue = (changes: CellChange[], prevData: CheckboxData[][], usePrevValue: boolean = false): CheckboxData[][] => {
@@ -231,13 +263,23 @@ const DynamicTable = (props: any) => {
         );
     };
 
-    const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleImport = (e: ChangeEvent<HTMLInputElement>) => {
         const files = (e.target as HTMLInputElement).files;
         if (files !== undefined && files !== null && files.length > 0) {
             loadFromFile(files[0]);
             setFile(files[0]);
         }
         e.target.value = "";
+    };
+
+    const handleExport = () => {
+        const headings = [getExcelHeadingFromData()];
+        const wb = utils.book_new();
+        const ws = utils.json_to_sheet([]);
+        utils.sheet_add_aoa(ws, headings);
+        utils.sheet_add_json(ws, getExcelDataFromData(), { origin: "A2", skipHeader: true });
+        utils.book_append_sheet(wb, ws, "シート 1");
+        writeFile(wb, "Lumina.xlsx");
     };
 
     const handleSave = () => {
@@ -419,23 +461,18 @@ const DynamicTable = (props: any) => {
                     リセット
                 </Button>
 
-                <CSVLink
-                    headers={[
-                        { label: "ヘッダ", key: "header" },
-                        { label: "キーワード", key: "keywords" },
-                    ]}
-                    data={getFromData()}
-                    filename="Lumina.csv"
-                    style={{ textDecorationLine: "none", WebkitTextDecorationLine: "none" }}
-                >
-                    <Button size="small" sx={{ mb: 1, mr: 1 }} variant="outlined">
-                        <Download /> CSVダウンロード
-                    </Button>
-                </CSVLink>
+                <Button size="small" sx={{ mb: 1, mr: 1 }} variant="outlined" onClick={handleExport}>
+                    <Download /> Excelダウンロード
+                </Button>
 
                 <Button size="small" sx={{ mb: 1 }} variant="outlined" component="label">
-                    <Upload /> CSVロード
-                    <input hidden type="file" accept=".csv" onChange={handleFileUpload} />
+                    <Upload /> Excelロード
+                    <input
+                        hidden
+                        type="file"
+                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                        onChange={handleImport}
+                    />
                 </Button>
 
                 <IconButton sx={{ mb: 1 }} onClick={handleSave} disabled={isSaving}>
