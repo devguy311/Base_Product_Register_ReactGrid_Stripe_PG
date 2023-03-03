@@ -48,6 +48,27 @@ app.post("/descriptions", (req, res) => {
     });
 });
 
+app.get("/me", (req, res) => {
+    axios
+        .get("https://api.thebase.in/1/users/me", {
+            headers: {
+                Authorization: `Bearer ${req.query.accessToken}`,
+            },
+        })
+        .then((response) => {
+            return res.status(200).json({
+                result: "success",
+                user: response.data.user,
+            });
+        })
+        .catch((error) => {
+            return res.status(400).json({
+                result: "failure",
+                error,
+            });
+        });
+});
+
 app.post("/credentials", (req, res) => {
     const accessToken = req.body.accessToken;
     const refreshToken = req.body.refreshToken;
