@@ -31,6 +31,13 @@ const HomePage = () => {
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
 
+    const checkPayment = async () => {
+        const stripe = await getStripe();
+        if (stripe === null) console.error("Stripeへの接続に失敗しました!");
+        else {
+        }
+    };
+
     const handleChange = (_event: SyntheticEvent, newValue: number) => {
         setTabIndex(newValue);
     };
@@ -54,6 +61,7 @@ const HomePage = () => {
                 customerEmail: user?.mail_address,
             });
             console.warn(error);
+
             setIsYearlyButtonLoading(false);
             setIsMonthlyButtonLoading(false);
         }
@@ -87,8 +95,7 @@ const HomePage = () => {
                         alert("おっと、ユザーがないですね！");
                     })
                     .finally(() => {
-                        // setTimeout(checkPayment, 1000);
-                        // setTimeout(handlePaymentCheckout, 1000);
+                        setTimeout(checkPayment, 1000);
                         setLoadingStatus(LoadingStatus.LOADED);
                     });
             })
@@ -109,7 +116,7 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] === undefined && (
                 <Link
-                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=write_items`}
+                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`}
                 >
                     認可する
                 </Link>
@@ -123,7 +130,7 @@ const HomePage = () => {
                                     製品購入
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    800円。 / 年
+                                    ５３，７８４円。　／　年
                                 </Typography>
                             </CardContent>
                         </CardActionArea>
@@ -147,7 +154,7 @@ const HomePage = () => {
                                     製品購入
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    100円。 / 月
+                                    ４，９８０円。　／　月
                                 </Typography>
                             </CardContent>
                         </CardActionArea>
@@ -167,7 +174,10 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
-                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                    <Box
+                        sx={{ borderBottom: 1, borderColor: "divider" }}
+                        style={{ backgroundImage: `url(${user?.background})`, backgroundRepeat: user?.repeat_background ? "repeat" : "no-repeat" }}
+                    >
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
                             <Tab label="サンプル" {...a11yProps(0)} />
                         </Tabs>
