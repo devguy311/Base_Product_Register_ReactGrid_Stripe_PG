@@ -286,6 +286,7 @@ const DynamicTable = (props: any) => {
         setIsSaving(true);
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, {
+                email: props.email,
                 data: getFromData(),
             })
             .then((response) => {

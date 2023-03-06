@@ -31,11 +31,14 @@ const HomePage = () => {
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
 
-    const checkPayment = async () => {
-        const stripe = await getStripe();
-        if (stripe === null) console.error("Stripeへの接続に失敗しました!");
-        else {
-        }
+    const checkPayment = (email: string, done: () => void) => {
+        axios
+            .post(`${process.env.REACT_APP_BACKEND_URL}/stripe/check`, { email })
+            .then((response) => {
+                if (response.data.result === "success")
+                    setPaymentStatus(response.data.interval === "month" ? PaymentStatus.PAID_MONTHLY : PaymentStatus.PAID_YEARLY);
+            })
+            .finally(() => done());
     };
 
     const handleChange = (_event: SyntheticEvent, newValue: number) => {
@@ -56,7 +59,7 @@ const HomePage = () => {
                 ],
                 locale: "ja",
                 mode: "subscription",
-                successUrl: `${window.location.origin}`,
+                successUrl: `${process.env.REACT_APP_BACKEND_URL}/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancelUrl: `${window.location.origin}`,
                 customerEmail: user?.mail_address,
             });
@@ -69,6 +72,8 @@ const HomePage = () => {
 
     useEffect(() => {
         let accessToken = token[0];
+        let email: string;
+
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/credentials`, {
                 accessToken,
@@ -89,14 +94,14 @@ const HomePage = () => {
                     })
                     .then((response) => {
                         setUser(response.data.user);
-                        if (response.data.user.mail_address === undefined) alert("メールアドレスないですね！");
+                        email = response.data.user.mail_address;
+                        if (email === undefined) alert("メールアドレスないですね！");
                     })
                     .catch(() => {
                         alert("おっと、ユザーがないですね！");
                     })
                     .finally(() => {
-                        setTimeout(checkPayment, 1000);
-                        setLoadingStatus(LoadingStatus.LOADED);
+                        checkPayment(email, () => setLoadingStatus(LoadingStatus.LOADED));
                     });
             })
             .catch(() => {
@@ -174,15 +179,18 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
-                    <Box
-                        sx={{ borderBottom: 1, borderColor: "divider" }}
-                        style={{ backgroundImage: `url(${user?.background})`, backgroundRepeat: user?.repeat_background ? "repeat" : "no-repeat" }}
-                    >
+                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
                             <Tab label="サンプル" {...a11yProps(0)} />
+                            {/* <Tab
+                                style={{
+                                    backgroundImage: `url(${user?.background})`,
+                                    backgroundRepeat: user?.repeat_background ? "repeat" : "no-repeat",
+                                }}
+                            ></Tab> */}
                         </Tabs>
                     </Box>
-                    {tabIndex === 0 && <ProductPanel />}
+                    {tabIndex === 0 && <ProductPanel email={user?.mail_address} />}
                 </>
             )}
         </>

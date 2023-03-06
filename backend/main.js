@@ -3,6 +3,9 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 const { Pool } = require("pg");
+const stripe = require("stripe")(
+    process.env.STRIPE_SECRET_KEY || "sk_test_51Mh2sVADW7HKLIBblqO3FY6Wv5Yx2dmHpKbsnwI57qyGJX2sm0SrD62WYN6NfXL1nCQrqqQy2WtwtIxYE2CIpJYh00utYcr8kr"
+);
 
 const pool = new Pool({
     user: process.env.POSTGRES_USER || "postgres",
@@ -15,10 +18,11 @@ const pool = new Pool({
 const app = express();
 
 const init = () => {
-    pool.query(`CREATE TABLE IF NOT EXISTS descriptions
+    pool.query(`CREATE TABLE IF NOT EXISTS users
         (
-            header          VARCHAR(50),
-            keywords        VARCHAR(1000)
+            email           VARCHAR(50) NOT NULL,
+            descriptions    VARCHAR(2000),
+            subscription    VARCHAR(30)
         )
     `);
 };
@@ -30,22 +34,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get("/descriptions", (req, res) => {
-    pool.query("SELECT * FROM descriptions", (error, result) => {
-        if (error) return res.status(404).json({ error });
-        res.json({ descriptions: result.rows });
+    pool.query(`SELECT (descriptions) FROM users WHERE email='${req.query.email}'`, (error, result) => {
+        let descriptions = [];
+        if (!error && result.rows.length !== 0 && result.rows[0].descriptions !== null)
+            result.rows[0].descriptions.split(";\t").forEach((t) => descriptions.push({ header: t.split(":\t")[0], keywords: t.split(":\t")[1].split(",\t") }));
+        res.json({ descriptions });
     });
 });
 
 app.post("/descriptions", (req, res) => {
-    const data = req.body.data;
-    pool.query("DELETE FROM descriptions", (error) => {
-        if (error) return res.status(400).json({ error });
-        if (data.length === 0) return res.json({ saved: true });
-        pool.query(`INSERT INTO descriptions(header, keywords) VALUES ${data.map((t) => `('${t.header}', '${t.keywords.join(",")}')`)}`, (error) => {
+    pool.query(
+        `UPDATE users SET descriptions='${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${req.body.email}'`,
+        (error) => {
             if (error) return res.status(400).json({ error });
             res.json({ saved: true });
-        });
-    });
+        }
+    );
 });
 
 app.get("/me", (req, res) => {
@@ -164,11 +168,38 @@ app.post("/product", (req, res) => {
                 /*result: "success"*/
             });
         })
-        .catch((error) => {
+        .catch(() => {
             return res.status(400).json({
                 /*result: "failure"*/
             });
         });
+});
+
+app.get("/stripe/success", async (req, res) => {
+    const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
+    pool.query(`SELECT * FROM users WHERE email='${session.customer_email}'`, (error, result) => {
+        if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
+        if (result.rows.length === 0)
+            pool.query(`INSERT INTO users(email, subscription) VALUES ('${session.customer_email}', '${session.subscription}')`, (error) => {
+                if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
+                res.redirect(process.env.APP_URL || "http://localhost:3000");
+            });
+        else {
+            pool.query(`UPDATE users SET subscription='${session.subscription}' WHERE email='${session.customer_email}'`, (error) => {
+                if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
+                res.redirect(process.env.APP_URL || "http://localhost:3000");
+            });
+        }
+    });
+});
+
+app.post("/stripe/check", async (req, res) => {
+    pool.query(`SELECT (subscription) FROM users WHERE email='${req.body.email}'`, async (error, result) => {
+        if (error || result.rows.length === 0 || result.rows[0].subscription === null) return res.status(404).json({ error });
+        const subscription = await stripe.subscriptions.retrieve(result.rows[0].subscription);
+        if (subscription.current_period_end < Math.floor(Date.now() / 1000)) res.json({ result: "failure" });
+        else res.json({ result: "success", interval: subscription.plan.interval });
+    });
 });
 
 app.listen(process.env.PORT || 5000, () => {

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import useAuthorizationCode from "../hooks/useAuthorizationCode";
 import { useNavigate, useSearchParams } from "react-router-dom";
+
+import useAuthorizationCode from "../hooks/useAuthorizationCode";
 
 const RedirectPage = () => {
     const navigate = useNavigate();
