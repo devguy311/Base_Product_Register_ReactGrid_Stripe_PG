@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const axios = require("axios");
 const { Pool } = require("pg");
 const stripe = require("stripe")(
-    process.env.STRIPE_SECRET_KEY || "sk_test_51Mh2sVADW7HKLIBblqO3FY6Wv5Yx2dmHpKbsnwI57qyGJX2sm0SrD62WYN6NfXL1nCQrqqQy2WtwtIxYE2CIpJYh00utYcr8kr"
+    process.env.STRIPE_SECRET_KEY || "sk_test_51Mh2sVADW7HKLIBbDnTG5vuOif1yFUCwbdpRpdiFfcrdXAYhos4HphRWyJA0cbLZAmacK5x5FrMZz7ZPIoGdgq9G00LisSyCVt"
 );
 
 const pool = new Pool({
@@ -36,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.get("/descriptions", (req, res) => {
     pool.query(`SELECT (descriptions) FROM users WHERE email='${req.query.email}'`, (error, result) => {
         let descriptions = [];
-        if (!error && result.rows.length !== 0 && result.rows[0].descriptions !== null)
+        if (!error && result.rows.length !== 0 && result.rows[0].descriptions !== null && result.rows[0].descriptions !== "")
             result.rows[0].descriptions.split(";\t").forEach((t) => descriptions.push({ header: t.split(":\t")[0], keywords: t.split(":\t")[1].split(",\t") }));
         res.json({ descriptions });
     });
