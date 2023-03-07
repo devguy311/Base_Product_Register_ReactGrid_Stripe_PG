@@ -54,14 +54,15 @@ const ProductDescriptionPanel = (props: any) => {
             if (prevActiveStep === 1) {
                 setProductDescriptionToCopy((prevText) => {
                     prevText = `色展開\t${colorList.join("\t")}\n\nサイズ\t${sizeList.join("\t")}\n\nサイズ(cm)`;
+                    let sizeLines = "";
                     sizeList.forEach((size, idx) => {
                         let newLine = "";
                         itemList.forEach((item, jdx) => {
-                            if (itemSizes[idx][jdx] !== 0) newLine += `\t\t/${item}\t\t${itemSizes[idx][jdx]}`;
+                            if (itemSizes[idx][jdx] !== 0) newLine += `\t/${item}\t${itemSizes[idx][jdx]}`;
                         });
-                        if (newLine !== "") prevText += `\n\n${size + newLine}`;
+                        if (newLine !== "") sizeLines += `${sizeLines === "" ? "" : "\n"}\n${size + newLine}`;
                     });
-                    return prevText;
+                    return prevText + sizeLines;
                 });
                 setProductVariations((prevList) => {
                     prevList = [];
