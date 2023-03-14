@@ -19,11 +19,11 @@ import Grid from "@mui/material/Grid";
 import { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
 import axios from "axios";
 
-import { Size } from "./common/Size.d";
-import { SavingStatus } from "./common/SavingStatus.d";
-import useToken from "../hooks/useToken";
-import useAuthorizationCode from "../hooks/useAuthorizationCode";
-import { ProductVariation } from "./common/ProductVariation.d";
+import { Size, SavingStatus, ProductVariation } from "../types";
+import useToken from "../../../hooks/useToken";
+import useAuthorizationCode from "../../../hooks/useAuthorizationCode";
+
+const defaultSizeList = [Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
 
 const init2DArray = (rowLength: number, columnLength: number): number[][] => {
     let newArray: number[][] = [];
@@ -38,9 +38,10 @@ const init2DArray = (rowLength: number, columnLength: number): number[][] => {
 const ProductDescriptionPanel = (props: any) => {
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
-    const [size, setSize] = useState("0");
+    const [startSize, setStartSize] = useState("0");
+    const [endSize, setEndSize] = useState("0");
     const [activeStep, setActiveStep] = useState(0);
-    const [sizeList, setSizeList] = useState<Size[]>([Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6]);
+    const [sizeList, setSizeList] = useState<Size[]>([Size.XS]);
     const [itemList, setItemList] = useState<string[]>([]);
     const [colorList, setColorList] = useState<string[]>([]);
     const [itemSizes, setItemSizes] = useState<number[][]>([]);
@@ -87,8 +88,14 @@ const ProductDescriptionPanel = (props: any) => {
         setActiveStep(0);
     };
 
-    const handleSize = (event: SelectChangeEvent) => {
-        setSize(event.target.value);
+    const handleStartSize = (event: SelectChangeEvent) => {
+        if (parseInt(endSize) < parseInt(event.target.value)) setEndSize(event.target.value);
+        setStartSize(event.target.value);
+    };
+
+    const handleEndSize = (event: SelectChangeEvent) => {
+        if (parseInt(startSize) > parseInt(event.target.value)) setStartSize(event.target.value);
+        setEndSize(event.target.value);
     };
 
     const handleItemList = (_event: SyntheticEvent, newValue: string[]) => {
@@ -157,27 +164,8 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     useEffect(() => {
-        let sizeList: Size[] = [];
-        switch (size) {
-            case "0":
-                sizeList = [Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
-                break;
-            case "1":
-                sizeList = [Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
-                break;
-            case "2":
-                sizeList = [Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
-                break;
-            case "3":
-                sizeList = [Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
-                break;
-            case "4":
-                sizeList = [Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
-                break;
-            default:
-        }
-        setSizeList(sizeList);
-    }, [size]);
+        setSizeList(defaultSizeList.slice(parseInt(startSize), parseInt(endSize) + 1));
+    }, [startSize, endSize]);
 
     return (
         <>
@@ -196,12 +184,35 @@ const ProductDescriptionPanel = (props: any) => {
                                 サイズ
                             </Grid>
                             <Grid item xs={10}>
-                                <Select size="small" sx={{ mr: 2 }} value={size} onChange={handleSize}>
-                                    <MenuItem value="0">サイズ XS~</MenuItem>
-                                    <MenuItem value="1">サイズ S~</MenuItem>
-                                    <MenuItem value="2">サイズ M~</MenuItem>
-                                    <MenuItem value="3">サイズ L~</MenuItem>
-                                    <MenuItem value="4">サイズ XL~</MenuItem>
+                                <Select size="small" sx={{ mr: 2 }} value={startSize} onChange={handleStartSize}>
+                                    {itemList.map((item, jdx) => (
+                                        <MenuItem value="0">サイズ XS</MenuItem>
+                                    ))}
+                                    <MenuItem value="0">サイズ XS</MenuItem>
+                                    <MenuItem value="1">サイズ S</MenuItem>
+                                    <MenuItem value="2">サイズ M</MenuItem>
+                                    <MenuItem value="3">サイズ L</MenuItem>
+                                    <MenuItem value="4">サイズ XL</MenuItem>
+                                    <MenuItem value="5">サイズ XL2</MenuItem>
+                                    <MenuItem value="6">サイズ XL3</MenuItem>
+                                    <MenuItem value="7">サイズ XL4</MenuItem>
+                                    <MenuItem value="8">サイズ XL5</MenuItem>
+                                    <MenuItem value="9">サイズ XL6</MenuItem>
+                                </Select>
+
+                                <span>~</span>
+
+                                <Select size="small" sx={{ mr: 2 }} value={endSize} onChange={handleEndSize} style={{ marginLeft: 16 }}>
+                                    <MenuItem value="0">サイズ XS</MenuItem>
+                                    <MenuItem value="1">サイズ S</MenuItem>
+                                    <MenuItem value="2">サイズ M</MenuItem>
+                                    <MenuItem value="3">サイズ L</MenuItem>
+                                    <MenuItem value="4">サイズ XL</MenuItem>
+                                    <MenuItem value="5">サイズ XL2</MenuItem>
+                                    <MenuItem value="6">サイズ XL3</MenuItem>
+                                    <MenuItem value="7">サイズ XL4</MenuItem>
+                                    <MenuItem value="8">サイズ XL5</MenuItem>
+                                    <MenuItem value="9">サイズ XL6</MenuItem>
                                 </Select>
                             </Grid>
                             <Grid item xs={2}>

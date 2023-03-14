@@ -4,11 +4,12 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import ProductDescriptionPanel from "../../../ProductDescriptionPanel";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { IconButton } from "@mui/material";
 import { AddBoxRounded } from "@mui/icons-material";
+
+import ProductDescriptionPanel from "./ProductDescriptionPanel";
 
 const AddProductDialog = (props: any) => {
     const [open, setOpen] = useState(false);

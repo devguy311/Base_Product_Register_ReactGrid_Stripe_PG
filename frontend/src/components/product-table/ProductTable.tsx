@@ -6,11 +6,7 @@ import { Button, IconButton } from "@mui/material";
 import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
-import { ProductKeyword } from "./components/ProductKeyword";
-import { CheckboxData } from "./components/DynamicTable";
-import { ExcelData } from "./components/ExcelData";
-import CopyToClipboardButton from "./components/CopyToClipboardButton";
-import AddProductDialog from "./components/AddProductDialog";
+import { ProductKeyword, CheckboxData, ExcelData, CopyToClipboardButton, AddProductDialog } from ".";
 
 const getData = (source: ProductKeyword[]): CheckboxData[][] => {
     let data: CheckboxData[][] = [];
@@ -85,7 +81,7 @@ const getRows = (data: CheckboxData[][]): Row[] => [
     }),
 ];
 
-const DynamicTable = (props: any) => {
+const ProductTable = (props: any) => {
     const [file, setFile] = useState<File>();
     const [isSaving, setIsSaving] = useState(false);
     const [header, setHeader] = useState<Row>(getHeader((props.source as ProductKeyword[]) || []));
@@ -425,14 +421,14 @@ const DynamicTable = (props: any) => {
             t.forEach((t, jdx) => {
                 if (idx === 0) texts.push("");
 
-                if (t.checked) texts[jdx] += t.text + "　";
+                if (t.checked) texts[jdx] += t.text + " ";
             })
         );
         setTextToCopy((prevTextToCopy) => {
             prevTextToCopy = "";
             texts.forEach((t) => {
                 t = t.trimEnd();
-                if (t !== "") prevTextToCopy += t + "　";
+                if (t !== "") prevTextToCopy += t + " ";
             });
             return prevTextToCopy.trim();
         });
@@ -498,4 +494,4 @@ const DynamicTable = (props: any) => {
     );
 };
 
-export default DynamicTable;
+export default ProductTable;

@@ -7,6 +7,10 @@ const stripe = require("stripe")(
     process.env.STRIPE_SECRET_KEY || "sk_test_51Mh2sVADW7HKLIBbDnTG5vuOif1yFUCwbdpRpdiFfcrdXAYhos4HphRWyJA0cbLZAmacK5x5FrMZz7ZPIoGdgq9G00LisSyCVt"
 );
 
+const DEFAULT_ITEMS = "バスト,\tウェスト,\tヒップ,\t肩幅,\t袖丈,\t袖口,\tスカート丈,\t縦,\t横,\t厚さ,\tストラップ長さ,\t裾丈,\tズボン丈";
+const DEFAULT_COLORS =
+    "白,\tホワイト,\t黒,\tブラック,\t赤,\tレッド,\t青,\tブルー,\t緑,\tグリーン,\t紫,\tパープル,\t茶色,\tブラウン,\t灰色,\tグレー,\t黄色,\tオフホワイト,\tベージュ,\tカーキ,\tイエロー,\tピンク,\t藍色,\tオレンジ,\t水色,\tワインレッド,\tネイビー,\t金色,\t銀色,\tゴールド,\tシルバー,\tパステルカラー,\tくすみカラー,\t大人カラー,\tベイクドカラー,\tバイカラー,\tモノトーン,\t春カラー,\t秋カラー,\tニュアンスカラー,\tカラバリ,\tミリタリー,\t光沢,\tメタリック,\tアプリコット";
+
 const pool = new Pool({
     user: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PSW || "postgres",
@@ -22,6 +26,10 @@ const init = () => {
         (
             email           VARCHAR(50) NOT NULL,
             descriptions    VARCHAR(2000),
+            items           VARCHAR(500),
+            colors          VARCHAR(500),
+            header          VARCHAR(1000),
+            footer          VARCHAR(1000),
             subscription    VARCHAR(30)
         )
     `);
@@ -180,10 +188,13 @@ app.get("/stripe/success", async (req, res) => {
     pool.query(`SELECT * FROM users WHERE email='${session.customer_email}'`, (error, result) => {
         if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
         if (result.rows.length === 0)
-            pool.query(`INSERT INTO users(email, subscription) VALUES ('${session.customer_email}', '${session.subscription}')`, (error) => {
-                if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
-                res.redirect(process.env.APP_URL || "http://localhost:3000");
-            });
+            pool.query(
+                `INSERT INTO users(email, items, colors, subscription) VALUES ('${session.customer_email}', ${DEFAULT_ITEMS}, ${DEFAULT_COLORS}, '${session.subscription}')`,
+                (error) => {
+                    if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
+                    res.redirect(process.env.APP_URL || "http://localhost:3000");
+                }
+            );
         else {
             pool.query(`UPDATE users SET subscription='${session.subscription}' WHERE email='${session.customer_email}'`, (error) => {
                 if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);

@@ -4,15 +4,13 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import axios from "axios";
 import { Backdrop, Card, CardActionArea, CardActions, CardContent, CircularProgress, Link, Stack, Typography } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 import ProductPanel from "../components/ProductPanel";
+import { LoadingStatus, PaymentStatus, User } from "../types";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
-import { LoadingStatus } from "../components/common/LoadingStatus.d";
-import { PaymentStatus } from "../components/common/PaymentStatus.d";
-import { User } from "../components/common/User.d";
-import getStripe from "../components/lib/getStripe";
-import LoadingButton from "@mui/lab/LoadingButton";
+import getStripe from "../lib/getStripe";
 
 const a11yProps = (index: number) => {
     return {

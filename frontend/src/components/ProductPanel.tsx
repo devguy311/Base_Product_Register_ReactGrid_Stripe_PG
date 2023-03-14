@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import LinearProgress from "@mui/material/LinearProgress";
 
-import DynamicTable from "./common/dynamic-table";
-import { LoadingStatus } from "./common/LoadingStatus.d";
-import { ProductKeyword } from "./common/dynamic-table/components/ProductKeyword";
+import ProductTable, { ProductKeyword } from "./product-table";
+import { LoadingStatus } from "../types";
 
 const ProductPanel = (props: any) => {
     const [data, setData] = useState<ProductKeyword[]>([]);
@@ -21,7 +20,7 @@ const ProductPanel = (props: any) => {
     return (
         <>
             {loadingStatus === LoadingStatus.LOADING && <LinearProgress />}
-            {loadingStatus === LoadingStatus.LOADED && <DynamicTable source={data} email={props.email} />}
+            {loadingStatus === LoadingStatus.LOADED && <ProductTable source={data} email={props.email} />}
         </>
     );
 };
