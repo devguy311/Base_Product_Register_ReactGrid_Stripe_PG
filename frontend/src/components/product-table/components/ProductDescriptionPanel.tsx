@@ -324,7 +324,7 @@ const ProductDescriptionPanel = (props: any) => {
                         <Box sx={{ mb: 2 }}>
                             <div>
                                 <Button variant="contained" onClick={handleNext} sx={{ mt: 1, mr: 1 }}>
-                                    続く
+                                    次へ
                                 </Button>
                             </div>
                         </Box>
@@ -415,7 +415,7 @@ const ProductDescriptionPanel = (props: any) => {
                         <Box sx={{ mb: 2 }}>
                             <div>
                                 <Button variant="contained" onClick={handleNext} sx={{ mt: 1, mr: 1 }}>
-                                    続く
+                                    次へ
                                 </Button>
                                 <Button onClick={handleBack} sx={{ mt: 1, mr: 1 }}>
                                     戻る
@@ -481,7 +481,7 @@ const ProductDescriptionPanel = (props: any) => {
             )}
             {savingStatus === SavingStatus.SAVED && (
                 <Alert severity="success">
-                    <AlertTitle>成功</AlertTitle>商品が追加ました
+                    <AlertTitle>成功</AlertTitle>商品が追加しました
                 </Alert>
             )}
             {savingStatus === SavingStatus.NOT_SAVED && (

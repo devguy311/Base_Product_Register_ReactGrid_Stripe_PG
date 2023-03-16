@@ -38,12 +38,12 @@ const AddProductDialog = (props: any) => {
                 aria-labelledby="scroll-dialog-title"
                 aria-describedby="scroll-dialog-content"
             >
-                <DialogTitle id="scroll-dialog-title">商品説明テンプレ</DialogTitle>
+                <DialogTitle id="scroll-dialog-title">商品登録</DialogTitle>
                 <DialogContent dividers>
                     <ProductDescriptionPanel email={props.email} productName={props.name} />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>近い</Button>
+                    <Button onClick={handleClose}>閉じる</Button>
                 </DialogActions>
             </Dialog>
         </>
