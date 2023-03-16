@@ -4,6 +4,7 @@ import {
     Autocomplete,
     Box,
     Button,
+    ButtonGroup,
     CircularProgress,
     MenuItem,
     Select,
@@ -19,7 +20,7 @@ import Grid from "@mui/material/Grid";
 import { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
 import axios from "axios";
 
-import { Size, SavingStatus, ProductVariation } from "../types";
+import { Size, SavingStatus, ProductVariation } from "../types/index.d";
 import useToken from "../../../hooks/useToken";
 import useAuthorizationCode from "../../../hooks/useAuthorizationCode";
 
@@ -44,10 +45,17 @@ const ProductDescriptionPanel = (props: any) => {
     const [sizeList, setSizeList] = useState<Size[]>([Size.XS]);
     const [itemList, setItemList] = useState<string[]>([]);
     const [colorList, setColorList] = useState<string[]>([]);
+    const [itemBaseList, setItemBaseList] = useState<string[]>([]);
+    const [colorBaseList, setColorBaseList] = useState<string[]>([]);
     const [itemSizes, setItemSizes] = useState<number[][]>([]);
     const [itemStocks, setItemStocks] = useState<number[][]>([]);
     const [productDescriptionToCopy, setProductDescriptionToCopy] = useState("");
     const [productVariations, setProductVariations] = useState<ProductVariation[]>([]);
+    const [header, setHeader] = useState("");
+    const [footer, setFooter] = useState("");
+    const [price, setPrice] = useState(0);
+    const [itemStock, setItemStock] = useState(0);
+    const [identifier, setIdentifier] = useState("");
     const [savingStatus, setSavingStatus] = useState(SavingStatus.NOT_SAVING);
 
     const handleNext = () => {
@@ -59,7 +67,7 @@ const ProductDescriptionPanel = (props: any) => {
                     sizeList.forEach((size, idx) => {
                         let newLine = "";
                         itemList.forEach((item, jdx) => {
-                            if (itemSizes[idx][jdx] !== 0) newLine += `\t/${item}\t${itemSizes[idx][jdx]}`;
+                            if (itemSizes[idx][jdx] > 0) newLine += `\t/${item}\t${itemSizes[idx][jdx]}`;
                         });
                         if (newLine !== "") sizeLines += `${sizeLines === "" ? "" : "\n"}\n${size + newLine}`;
                     });
@@ -69,7 +77,7 @@ const ProductDescriptionPanel = (props: any) => {
                     prevList = [];
                     colorList.forEach((color, idx) => {
                         sizeList.forEach((size, jdx) => {
-                            if (itemStocks[idx][jdx] !== 0) prevList.push({ name: `${color}　${size}`, stock: itemStocks[idx][jdx] });
+                            if (itemStocks[idx][jdx] > 0) prevList.push({ name: `${color}　${size}`, stock: itemStocks[idx][jdx] });
                         });
                     });
                     return prevList;
@@ -91,11 +99,19 @@ const ProductDescriptionPanel = (props: any) => {
     const handleStartSize = (event: SelectChangeEvent) => {
         if (parseInt(endSize) < parseInt(event.target.value)) setEndSize(event.target.value);
         setStartSize(event.target.value);
+        const newSizeList = defaultSizeList.slice(parseInt(event.target.value), parseInt(endSize) + 1);
+        setSizeList(newSizeList);
+        setItemSizes(init2DArray(newSizeList.length, itemList.length));
+        setItemStocks(init2DArray(colorList.length, newSizeList.length));
     };
 
     const handleEndSize = (event: SelectChangeEvent) => {
         if (parseInt(startSize) > parseInt(event.target.value)) setStartSize(event.target.value);
         setEndSize(event.target.value);
+        const newSizeList = defaultSizeList.slice(parseInt(startSize), parseInt(event.target.value) + 1);
+        setSizeList(newSizeList);
+        setItemSizes(init2DArray(newSizeList.length, itemList.length));
+        setItemStocks(init2DArray(colorList.length, newSizeList.length));
     };
 
     const handleItemList = (_event: SyntheticEvent, newValue: string[]) => {
@@ -106,6 +122,28 @@ const ProductDescriptionPanel = (props: any) => {
     const handleColorList = (_event: SyntheticEvent, newValue: string[]) => {
         setColorList(newValue);
         setItemStocks(init2DArray(newValue.length, sizeList.length));
+    };
+
+    const handleSizeAutoIncrement = (index: number, increaseRate: number) => {
+        setItemSizes(
+            itemSizes.map((t, idx) => {
+                if (idx <= index) return t.slice();
+                return t.map((t, jdx) =>
+                    itemSizes[index][jdx] === undefined || itemSizes[index][jdx] <= 0 ? t : itemSizes[index][jdx] + increaseRate * (idx - index)
+                );
+            })
+        );
+    };
+
+    const handleStockAutoIncrement = (index: number, increaseRate: number) => {
+        setItemStocks(
+            itemStocks.map((t, idx) => {
+                return t.map((t, jdx) => {
+                    if (jdx <= index) return t;
+                    return itemStocks[idx][index] === undefined || itemStocks[idx][index] <= 0 ? t : itemStocks[idx][index] + increaseRate * (jdx - index);
+                });
+            })
+        );
     };
 
     const handleItemSize = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -130,9 +168,35 @@ const ProductDescriptionPanel = (props: any) => {
         setItemStocks(newItemStocks);
     };
 
+    const handleHeader = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setHeader(e.target.value);
+    };
+
+    const handleFooter = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setFooter(e.target.value);
+    };
+
+    const handlePrice = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setPrice(parseInt(e.target.value));
+    };
+
+    const handleItemStock = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setItemStock(parseInt(e.target.value));
+    };
+
+    const handleIdentifier = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setIdentifier(e.target.value);
+    };
+
     const handleSubmit = () => {
         setActiveStep(activeStep + 1);
         setSavingStatus(SavingStatus.SAVING);
+
+        axios.post(`${process.env.REACT_APP_BACKEND_URL}/product/header-footer`, {
+            email: props.email,
+            header,
+            footer,
+        });
 
         let accessToken = token[0];
         axios
@@ -150,8 +214,10 @@ const ProductDescriptionPanel = (props: any) => {
                     .post(`${process.env.REACT_APP_BACKEND_URL}/product`, {
                         accessToken,
                         title: props.productName,
-                        detail: productDescriptionToCopy,
-                        variations: productVariations,
+                        detail: `${header}\n\n${productDescriptionToCopy}\n\n${footer}\n\n${identifier}`,
+                        price,
+                        identifier,
+                        ...(productVariations.length === 0 ? { stock: itemStock } : { variations: productVariations }),
                     })
                     .then(() => setSavingStatus(SavingStatus.SAVED))
                     .catch(() => setSavingStatus(SavingStatus.NOT_SAVED));
@@ -164,22 +230,31 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     useEffect(() => {
-        setSizeList(defaultSizeList.slice(parseInt(startSize), parseInt(endSize) + 1));
-    }, [startSize, endSize]);
+        axios
+            .get(`${process.env.REACT_APP_BACKEND_URL}/product`, {
+                params: {
+                    email: props.email,
+                },
+            })
+            .then((response) => {
+                const productInfo = response.data.productInfo;
+                if (productInfo !== undefined) {
+                    setItemBaseList(productInfo.items.split(",\t"));
+                    setColorBaseList(productInfo.colors.split(",\t"));
+                    setHeader(productInfo.header);
+                    setFooter(productInfo.footer);
+                }
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <>
             <Stepper activeStep={activeStep} orientation="vertical">
                 <Step key={0}>
-                    <StepLabel>どうぞ</StepLabel>
+                    <StepLabel>ステップ　一</StepLabel>
                     <StepContent>
                         <Grid container spacing={2}>
-                            <Grid item xs={2}>
-                                商品名
-                            </Grid>
-                            <Grid item xs={10}>
-                                {props.productName}
-                            </Grid>
                             <Grid item xs={2}>
                                 サイズ
                             </Grid>
@@ -222,21 +297,7 @@ const ProductDescriptionPanel = (props: any) => {
                                 <Autocomplete
                                     multiple
                                     size="small"
-                                    options={[
-                                        "バスト",
-                                        "ウェスト",
-                                        "ヒップ",
-                                        "肩幅",
-                                        "袖丈",
-                                        "袖口",
-                                        "スカート丈",
-                                        "縦",
-                                        "横",
-                                        "厚さ",
-                                        "ストラップ長さ",
-                                        "裾丈",
-                                        "ズボン丈",
-                                    ]}
+                                    options={itemBaseList}
                                     value={itemList}
                                     onChange={handleItemList}
                                     getOptionLabel={(option) => option || ""}
@@ -251,53 +312,7 @@ const ProductDescriptionPanel = (props: any) => {
                                 <Autocomplete
                                     multiple
                                     size="small"
-                                    options={[
-                                        "白",
-                                        "ホワイト",
-                                        "黒",
-                                        "ブラック",
-                                        "赤",
-                                        "レッド",
-                                        "青",
-                                        "ブルー",
-                                        "緑",
-                                        "グリーン",
-                                        "紫",
-                                        "パープル",
-                                        "茶色",
-                                        "ブラウン",
-                                        "灰色",
-                                        "グレー",
-                                        "黄色",
-                                        "オフホワイト",
-                                        "ベージュ",
-                                        "カーキ",
-                                        "イエロー",
-                                        "ピンク",
-                                        "藍色",
-                                        "オレンジ",
-                                        "水色",
-                                        "ワインレッド",
-                                        "ネイビー",
-                                        "金色",
-                                        "銀色",
-                                        "ゴールド",
-                                        "シルバー",
-                                        "パステルカラー",
-                                        "くすみカラー",
-                                        "大人カラー",
-                                        "ベイクドカラー",
-                                        "バイカラー",
-                                        "モノトーン",
-                                        "春カラー",
-                                        "秋カラー",
-                                        "ニュアンスカラー",
-                                        "カラバリ",
-                                        "ミリタリー",
-                                        "光沢",
-                                        "メタリック",
-                                        "アプリコット",
-                                    ]}
+                                    options={colorBaseList}
                                     value={colorList}
                                     onChange={handleColorList}
                                     getOptionLabel={(option) => option || ""}
@@ -316,53 +331,86 @@ const ProductDescriptionPanel = (props: any) => {
                     </StepContent>
                 </Step>
                 <Step key={1}>
-                    <StepLabel>どうぞ</StepLabel>
+                    <StepLabel>
+                        ステップ　ニ　
+                        {activeStep === 1 && (
+                            <Button size="small" variant="outlined" onClick={handleBack}>
+                                戻る
+                            </Button>
+                        )}
+                    </StepLabel>
                     <StepContent>
                         <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                サイズ(cm)
-                            </Grid>
-                            {sizeList.map((size, idx) => (
-                                <Grid key={idx} item display={"flex"} xs={12}>
-                                    <Grid item xs={2}>
-                                        {size}
+                            {itemList.length !== 0 && (
+                                <>
+                                    <Grid item xs={12}>
+                                        サイズ(cm)
                                     </Grid>
+                                    {sizeList.map((size, idx) => (
+                                        <Grid key={idx} item display={"flex"} xs={12}>
+                                            <Grid item xs={1} sx={{ pt: 1, pl: 2 }}>
+                                                {size}
+                                            </Grid>
 
-                                    <Grid item xs={10}>
-                                        {itemList.map((item, jdx) => (
-                                            <TextField
-                                                key={jdx}
-                                                id={"item_" + idx + "_" + jdx}
-                                                size="small"
-                                                sx={{ mb: 1, mr: 1 }}
-                                                value={itemSizes[idx][jdx]}
-                                                label={item}
-                                                type="number"
-                                                onChange={handleItemSize}
-                                            />
-                                        ))}
-                                    </Grid>
-                                </Grid>
-                            ))}
-                            <Grid item xs={12}>
-                                バリエーション
-                            </Grid>
-                            {sizeList.map((size, idx) => (
-                                <Grid key={idx} item display={"flex"} xs={12}>
-                                    {colorList.map((color, jdx) => (
-                                        <TextField
-                                            key={jdx}
-                                            id={"color_" + jdx + "_" + idx}
-                                            size="small"
-                                            sx={{ mb: 1, mr: 1 }}
-                                            value={itemStocks[jdx][idx]}
-                                            label={color + "　" + size}
-                                            type="number"
-                                            onChange={handleItemStocks}
-                                        />
+                                            <Grid item xs={1} sx={{ pt: 1 }}>
+                                                <ButtonGroup size="small" variant="text" area-aria-label="auto-increment-helper">
+                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 1)}>+1</Button>
+                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 2)}>+2</Button>
+                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 3)}>+3</Button>
+                                                </ButtonGroup>
+                                            </Grid>
+
+                                            <Grid item xs={10}>
+                                                {itemList.map((item, jdx) => (
+                                                    <TextField
+                                                        key={jdx}
+                                                        id={"item_" + idx + "_" + jdx}
+                                                        size="small"
+                                                        sx={{ mb: 1, mr: 1 }}
+                                                        value={itemSizes[idx][jdx]}
+                                                        label={item}
+                                                        type="number"
+                                                        onChange={handleItemSize}
+                                                    />
+                                                ))}
+                                            </Grid>
+                                        </Grid>
                                     ))}
-                                </Grid>
-                            ))}
+                                </>
+                            )}
+
+                            {colorList.length !== 0 && (
+                                <>
+                                    <Grid item xs={12}>
+                                        バリエーション
+                                    </Grid>
+                                    {sizeList.map((size, idx) => (
+                                        <Grid key={idx} item display="flex" xs={12}>
+                                            <Grid item xs={1} sx={{ pt: 1 }}>
+                                                <ButtonGroup size="small" variant="text" area-aria-label="auto-increment-helper">
+                                                    <Button onClick={() => handleStockAutoIncrement(idx, 1)}>+1</Button>
+                                                    <Button onClick={() => handleStockAutoIncrement(idx, 2)}>+2</Button>
+                                                    <Button onClick={() => handleStockAutoIncrement(idx, 3)}>+3</Button>
+                                                </ButtonGroup>
+                                            </Grid>
+                                            <Grid item display={"flex"} xs={11}>
+                                                {colorList.map((color, jdx) => (
+                                                    <TextField
+                                                        key={jdx}
+                                                        id={"color_" + jdx + "_" + idx}
+                                                        size="small"
+                                                        sx={{ mb: 1, mr: 1 }}
+                                                        value={itemStocks[jdx][idx]}
+                                                        label={color + "　" + size}
+                                                        type="number"
+                                                        onChange={handleItemStocks}
+                                                    />
+                                                ))}
+                                            </Grid>
+                                        </Grid>
+                                    ))}
+                                </>
+                            )}
                         </Grid>
                         <Box sx={{ mb: 2 }}>
                             <div>
@@ -377,15 +425,37 @@ const ProductDescriptionPanel = (props: any) => {
                     </StepContent>
                 </Step>
                 <Step key={2}>
-                    <StepLabel optional={<Typography variant="caption">最後</Typography>}>どうぞ</StepLabel>
+                    <StepLabel optional={<Typography variant="caption">最後</Typography>}>
+                        ステップ　三　
+                        {activeStep === 2 && (
+                            <Button size="small" variant="outlined" onClick={handleBack}>
+                                戻る
+                            </Button>
+                        )}
+                    </StepLabel>
                     <StepContent>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                商品説明
+                                <strong>商品名</strong>
+                                {" " + props.productName}
                             </Grid>
                             <Grid item xs={12}>
+                                <strong>商品説明</strong>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField value={header} label="ヘッダー" fullWidth multiline rows={7} onChange={handleHeader} />
                                 <p>{productDescriptionToCopy}</p>
-                                <p>{productVariations.map((t) => `${t.name}\t${t.stock}`).join("\t")}</p>
+                                <TextField value={footer} label="フッター" fullWidth multiline rows={7} onChange={handleFooter} />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <strong>必須設定</strong>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField size="small" sx={{ mr: 1 }} value={price} label="価格(税込)" type="number" onChange={handlePrice} />
+                                {productVariations.length === 0 && (
+                                    <TextField size="small" sx={{ mr: 1 }} value={itemStock} label="在庫数" type="number" onChange={handleItemStock} />
+                                )}
+                                <TextField size="small" value={identifier} label="商品コード" placeholder="list****" onChange={handleIdentifier} />
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>
@@ -417,6 +487,24 @@ const ProductDescriptionPanel = (props: any) => {
             {savingStatus === SavingStatus.NOT_SAVED && (
                 <Alert severity="error">
                     <AlertTitle>失敗</AlertTitle>製品の追加に失敗しました
+                    <Button
+                        onClick={() => {
+                            setSavingStatus(SavingStatus.NOT_SAVING);
+                            handleBack();
+                        }}
+                        sx={{ mt: 1, mr: 1 }}
+                    >
+                        戻る
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            setSavingStatus(SavingStatus.NOT_SAVING);
+                            handleReset();
+                        }}
+                        sx={{ mt: 1, mr: 1 }}
+                    >
+                        リセット
+                    </Button>
                 </Alert>
             )}
         </>

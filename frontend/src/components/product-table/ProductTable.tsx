@@ -6,7 +6,7 @@ import { Button, IconButton } from "@mui/material";
 import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
-import { ProductKeyword, CheckboxData, ExcelData, CopyToClipboardButton, AddProductDialog } from ".";
+import { ProductKeyword, CheckboxData, ExcelData, CopyToClipboardButton, AddProductDialog } from "./index.d";
 
 const getData = (source: ProductKeyword[]): CheckboxData[][] => {
     let data: CheckboxData[][] = [];
@@ -451,7 +451,7 @@ const ProductTable = (props: any) => {
         >
             <div>
                 新商品説明→ {textToCopy} <CopyToClipboardButton textToCopy={textToCopy} disabled={textToCopy === ""} />
-                <AddProductDialog name={textToCopy} hidden={textToCopy === ""} />
+                <AddProductDialog email={props.email} name={textToCopy} hidden={textToCopy === ""} />
             </div>
             <div>
                 <Button variant="outlined" size="small" sx={{ mb: 1, mr: 1 }} startIcon={<RefreshRounded />} onClick={handleReset}>

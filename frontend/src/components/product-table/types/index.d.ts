@@ -1,3 +1,3 @@
-export { Size } from "./Size";
-export { SavingStatus } from "./SavingStatus";
-export { ProductVariation } from "./ProductVariation";
+export { Size } from "./Size.d";
+export { SavingStatus } from "./SavingStatus.d";
+export type { ProductVariation } from "./ProductVariation.d";

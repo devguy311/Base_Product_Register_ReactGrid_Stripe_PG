@@ -1,5 +1,5 @@
 export { default } from "./ProductTable";
-export { ProductKeyword } from "./ProductKeyword";
+export type { ProductKeyword } from "./ProductKeyword";
 
 export interface CheckboxData {
     checked: boolean;
@@ -10,5 +10,5 @@ export interface ExcelData {
     [key: string]: string;
 }
 
-export { CopyToClipboardButton } from "./components/CopyToClipboardButton";
-export { AddProductDialog } from "./components/AddProductDialog";
+export { default as CopyToClipboardButton } from "./components/CopyToClipboardButton";
+export { default as AddProductDialog } from "./components/AddProductDialog";

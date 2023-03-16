@@ -32,6 +32,7 @@ const AddProductDialog = (props: any) => {
             <Dialog
                 open={open}
                 maxWidth="xl"
+                fullWidth
                 fullScreen={fullScreen}
                 scroll="paper"
                 aria-labelledby="scroll-dialog-title"
@@ -39,7 +40,7 @@ const AddProductDialog = (props: any) => {
             >
                 <DialogTitle id="scroll-dialog-title">商品説明テンプレ</DialogTitle>
                 <DialogContent dividers>
-                    <ProductDescriptionPanel productName={props.name} />
+                    <ProductDescriptionPanel email={props.email} productName={props.name} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>近い</Button>

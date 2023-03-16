@@ -1,4 +1,4 @@
-export interface User {
+declare interface User {
     shop_id: string;
     shop_name: string;
     shop_introduction: string;

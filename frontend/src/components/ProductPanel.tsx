@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import LinearProgress from "@mui/material/LinearProgress";
 
-import ProductTable, { ProductKeyword } from "./product-table";
-import { LoadingStatus } from "../types";
+import ProductTable, { ProductKeyword } from "./product-table/index.d";
+import { LoadingStatus } from "../types/index.d";
 
 const ProductPanel = (props: any) => {
     const [data, setData] = useState<ProductKeyword[]>([]);

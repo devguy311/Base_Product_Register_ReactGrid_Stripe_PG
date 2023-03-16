@@ -6,8 +6,9 @@ import axios from "axios";
 import { Backdrop, Card, CardActionArea, CardActions, CardContent, CircularProgress, Link, Stack, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 
+import SettingPanel from "../components/SettingPanel";
 import ProductPanel from "../components/ProductPanel";
-import { LoadingStatus, PaymentStatus, User } from "../types";
+import { LoadingStatus, PaymentStatus, User } from "../types/index.d";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
 import getStripe from "../lib/getStripe";
@@ -179,16 +180,12 @@ const HomePage = () => {
                 <>
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
-                            <Tab label="サンプル" {...a11yProps(0)} />
-                            {/* <Tab
-                                style={{
-                                    backgroundImage: `url(${user?.background})`,
-                                    backgroundRepeat: user?.repeat_background ? "repeat" : "no-repeat",
-                                }}
-                            ></Tab> */}
+                            <Tab label="設定" {...a11yProps(0)} />
+                            <Tab label="サンプル" {...a11yProps(1)} />
                         </Tabs>
                     </Box>
-                    {tabIndex === 0 && <ProductPanel email={user?.mail_address} />}
+                    {tabIndex === 0 && <SettingPanel user={user} />}
+                    {tabIndex === 1 && <ProductPanel email={user?.mail_address} />}
                 </>
             )}
         </>

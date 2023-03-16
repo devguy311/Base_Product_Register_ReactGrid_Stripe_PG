@@ -42,7 +42,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get("/descriptions", (req, res) => {
-    pool.query(`SELECT (descriptions) FROM users WHERE email='${req.query.email}'`, (error, result) => {
+    pool.query(`SELECT descriptions FROM users WHERE email='${req.query.email}'`, (error, result) => {
         let descriptions = [];
         if (!error && result.rows.length !== 0 && result.rows[0].descriptions !== null && result.rows[0].descriptions !== "")
             result.rows[0].descriptions.split(";\t").forEach((t) => descriptions.push({ header: t.split(":\t")[0], keywords: t.split(":\t")[1].split(",\t") }));
@@ -146,12 +146,49 @@ app.post("/credentials", (req, res) => {
         });
 });
 
+app.get("/product", (req, res) => {
+    pool.query(`SELECT items, colors, header, footer FROM users WHERE email='${req.query.email}'`, (error, result) => {
+        if (error && result.rows.length === 0) return res.status(404).json({ error });
+        res.json({ productInfo: result.rows[0] });
+    });
+});
+
+app.post("/product/info", (req, res) => {
+    pool.query(`SELECT * FROM users WHERE email='${req.body.email}'`, (error, result) => {
+        if (error || result.rows.length === 0) return res.status(404).json({ error });
+        pool.query(
+            `UPDATE users SET items='${req.body.itemList.join(",\t")}', colors='${req.body.colorList.join(",\t")}', header='${req.body.header}', footer='${
+                req.body.footer
+            }' WHERE email='${req.body.email}'`,
+            (error) => {
+                if (error) return res.status(400).json({ error });
+                res.json({
+                    /*result: "success"*/
+                });
+            }
+        );
+    });
+});
+
+app.post("/product/header-footer", (req, res) => {
+    pool.query(`SELECT * FROM users WHERE email='${req.body.email}'`, (error, result) => {
+        if (error || result.rows.length === 0) return res.status(404).json({ error });
+        pool.query(`UPDATE users SET header='${req.body.header}', footer='${req.body.footer}' WHERE email='${req.body.email}'`, (error) => {
+            if (error) return res.status(400).json({ error });
+            res.json({
+                /*result: "success"*/
+            });
+        });
+    });
+});
+
 app.post("/product", (req, res) => {
     const variationObject = {};
-    req.body.variations.forEach((t, idx) => {
-        variationObject[`variation[${idx}]`] = t.name;
-        variationObject[`variation_stock[${idx}]`] = t.stock;
-    });
+    if (req.body.variations !== undefined)
+        req.body.variations.forEach((t, idx) => {
+            variationObject[`variation[${idx}]`] = t.name;
+            variationObject[`variation_stock[${idx}]`] = t.stock;
+        });
 
     axios
         .post(
@@ -164,9 +201,10 @@ app.post("/product", (req, res) => {
                 params: {
                     title: req.body.title,
                     detail: req.body.detail,
-                    price: 50,
-                    stock: 0,
-                    visible: 0,
+                    price: Math.max(req.body.price, 50),
+                    identifier: req.body.identifier,
+                    stock: req.body.stock || 0,
+                    visible: process.env.MODE === "LIVE" ? 1 : 0,
                     ...variationObject,
                 },
             }
@@ -189,7 +227,7 @@ app.get("/stripe/success", async (req, res) => {
         if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
         if (result.rows.length === 0)
             pool.query(
-                `INSERT INTO users(email, items, colors, subscription) VALUES ('${session.customer_email}', ${DEFAULT_ITEMS}, ${DEFAULT_COLORS}, '${session.subscription}')`,
+                `INSERT INTO users(email, items, colors, subscription) VALUES ('${session.customer_email}', '${DEFAULT_ITEMS}', '${DEFAULT_COLORS}', '${session.subscription}')`,
                 (error) => {
                     if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
                     res.redirect(process.env.APP_URL || "http://localhost:3000");
@@ -205,7 +243,7 @@ app.get("/stripe/success", async (req, res) => {
 });
 
 app.post("/stripe/check", async (req, res) => {
-    pool.query(`SELECT (subscription) FROM users WHERE email='${req.body.email}'`, async (error, result) => {
+    pool.query(`SELECT subscription FROM users WHERE email='${req.body.email}'`, async (error, result) => {
         if (error || result.rows.length === 0 || result.rows[0].subscription === null) return res.status(404).json({ error });
         const subscription = await stripe.subscriptions.retrieve(result.rows[0].subscription);
         if (subscription.current_period_end < Math.floor(Date.now() / 1000)) res.json({ result: "failure" });
