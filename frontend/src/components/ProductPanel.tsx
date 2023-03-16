@@ -10,7 +10,7 @@ const ProductPanel = (props: any) => {
     const [loadingStatus, setLoadingStatus] = useState(LoadingStatus.LOADING);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, { params: { email: props.email } }).then((response) => {
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, { params: { email: props.email, no: props.no } }).then((response) => {
             setData(response.data.descriptions);
             setLoadingStatus(LoadingStatus.LOADED);
         });
@@ -20,7 +20,7 @@ const ProductPanel = (props: any) => {
     return (
         <>
             {loadingStatus === LoadingStatus.LOADING && <LinearProgress />}
-            {loadingStatus === LoadingStatus.LOADED && <ProductTable source={data} email={props.email} />}
+            {loadingStatus === LoadingStatus.LOADED && <ProductTable source={data} email={props.email} no={props.no} tabName={props.tabName} />}
         </>
     );
 };

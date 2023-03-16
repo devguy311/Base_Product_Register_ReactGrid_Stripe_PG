@@ -275,7 +275,7 @@ const ProductTable = (props: any) => {
         utils.sheet_add_aoa(ws, headings);
         utils.sheet_add_json(ws, getExcelDataFromData(), { origin: "A2", skipHeader: true });
         utils.book_append_sheet(wb, ws, "シート 1");
-        writeFile(wb, "Lumina.xlsx");
+        writeFile(wb, `${props.tabName}.xlsx`);
     };
 
     const handleSave = () => {
@@ -283,6 +283,7 @@ const ProductTable = (props: any) => {
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, {
                 email: props.email,
+                no: props.no,
                 data: getFromData(),
             })
             .then((response) => {
