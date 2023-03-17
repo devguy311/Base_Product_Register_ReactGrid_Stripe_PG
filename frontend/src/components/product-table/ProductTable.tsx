@@ -3,7 +3,7 @@ import axios from "axios";
 import { read, utils, writeFile } from "xlsx";
 import { ReactGrid, Column, Row, CellChange, SelectionMode, Id, MenuOption, TextCell } from "@silevis/reactgrid";
 import { Button, IconButton } from "@mui/material";
-import { Backup, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
+import { Backup, DeleteForeverRounded, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
 import { ProductKeyword, CheckboxData, ExcelData, CopyToClipboardButton, AddProductDialog } from "./index.d";
@@ -303,6 +303,15 @@ const ProductTable = (props: any) => {
         else loadFromFile(file);
     };
 
+    const handleRemoveAll = () => {
+        setHeader(getHeader([]));
+        setData([]);
+        setFooter(getFooter([]));
+        setColumns(getColumns([]));
+        setCellChanges([]);
+        setCellChangesIndex(-1);
+    };
+
     const handleContextMenu = (selectedRowIds: Id[], selectedColIds: Id[], selectionMode: SelectionMode, menuOptions: MenuOption[]): MenuOption[] => {
         if (selectionMode === "row") {
             menuOptions = [
@@ -478,6 +487,9 @@ const ProductTable = (props: any) => {
                 </IconButton>
                 <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
                     <ReplayRounded color="primary" />
+                </IconButton>
+                <IconButton sx={{ mb: 1 }} onClick={handleRemoveAll}>
+                    <DeleteForeverRounded color="primary" />
                 </IconButton>
             </div>
             <ReactGrid
