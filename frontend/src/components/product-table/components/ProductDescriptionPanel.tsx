@@ -135,17 +135,16 @@ const ProductDescriptionPanel = (props: any) => {
         );
     };
 
-    const handleStockAutoIncrement = (index: number, increaseRate: number) => {
+    const handleStockAutoFill = (index: number) => {
         setItemStocks(
             itemStocks.map((t, idx) => {
                 return t.map((t, jdx) => {
                     if (jdx <= index) return t;
-                    return itemStocks[idx][index] === undefined || itemStocks[idx][index] <= 0 ? t : itemStocks[idx][index] + increaseRate * (jdx - index);
+                    return itemStocks[idx][index] === undefined || itemStocks[idx][index] <= 0 ? t : itemStocks[idx][index];
                 });
             })
         );
     };
-
     const handleItemSize = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const split = e.target.id.split("_");
         const sizeIndex = parseInt(split[1]);
@@ -260,9 +259,6 @@ const ProductDescriptionPanel = (props: any) => {
                             </Grid>
                             <Grid item xs={10}>
                                 <Select size="small" sx={{ mr: 2 }} value={startSize} onChange={handleStartSize}>
-                                    {itemList.map((item, jdx) => (
-                                        <MenuItem value="0">サイズ XS</MenuItem>
-                                    ))}
                                     <MenuItem value="0">サイズ XS</MenuItem>
                                     <MenuItem value="1">サイズ S</MenuItem>
                                     <MenuItem value="2">サイズ M</MenuItem>
@@ -360,7 +356,7 @@ const ProductDescriptionPanel = (props: any) => {
                                                 </ButtonGroup>
                                             </Grid>
 
-                                            <Grid item xs={10}>
+                                            <Grid item display={"flex"} xs={10}>
                                                 {itemList.map((item, jdx) => (
                                                     <TextField
                                                         key={jdx}
@@ -386,12 +382,10 @@ const ProductDescriptionPanel = (props: any) => {
                                     </Grid>
                                     {sizeList.map((size, idx) => (
                                         <Grid key={idx} item display="flex" xs={12}>
-                                            <Grid item xs={1} sx={{ pt: 1 }}>
-                                                <ButtonGroup size="small" variant="text" area-aria-label="auto-increment-helper">
-                                                    <Button onClick={() => handleStockAutoIncrement(idx, 1)}>+1</Button>
-                                                    <Button onClick={() => handleStockAutoIncrement(idx, 2)}>+2</Button>
-                                                    <Button onClick={() => handleStockAutoIncrement(idx, 3)}>+3</Button>
-                                                </ButtonGroup>
+                                            <Grid item xs={1} sx={{ pt: 0.5 }} style={{ textAlign: "right" }}>
+                                                <Button size="small" onClick={() => handleStockAutoFill(idx)}>
+                                                    ¦¦
+                                                </Button>
                                             </Grid>
                                             <Grid item display={"flex"} xs={11}>
                                                 {colorList.map((color, jdx) => (

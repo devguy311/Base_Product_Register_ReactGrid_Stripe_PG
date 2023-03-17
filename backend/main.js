@@ -193,16 +193,11 @@ app.post("/product/header-footer", (req, res) => {
     });
 });
 
-app.post("/product", (req, res) => {
-    const variationObject = {};
-    if (req.body.variations !== undefined)
-        req.body.variations.forEach((t, idx) => {
-            variationObject[`variation[${idx}]`] = t.name;
-            variationObject[`variation_stock[${idx}]`] = t.stock;
-        });
+app.post("/product", async (req, res) => {
+    const variations = req.body.variations === undefined ? [] : req.body.variations;
 
-    axios
-        .post(
+    try {
+        const response = await axios.post(
             "https://api.thebase.in/1/items/add",
             {},
             {
@@ -216,20 +211,48 @@ app.post("/product", (req, res) => {
                     identifier: req.body.identifier,
                     stock: req.body.stock || 0,
                     visible: process.env.MODE === "LIVE" ? 1 : 0,
-                    ...variationObject,
                 },
             }
-        )
-        .then(() => {
-            return res.json({
-                /*result: "success"*/
-            });
-        })
-        .catch(() => {
-            return res.status(400).json({
-                /*result: "failure"*/
-            });
+        );
+        console.log(response.data.item.item_id);
+
+        let sliced = [];
+
+        for (let i = 0; i < variations.length; i += 14) {
+            sliced = variations.slice(i, i + 14);
+            if (sliced.length !== 0) {
+                let variationObject = {};
+                sliced.forEach((t, idx) => {
+                    variationObject[`variation[${idx}]`] = t.name;
+                    variationObject[`variation_stock[${idx}]`] = t.stock;
+                });
+                console.log(variationObject);
+
+                await axios.post(
+                    "https://api.thebase.in/1/items/edit",
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${req.body.accessToken}`,
+                        },
+                        params: {
+                            item_id: response.data.item.item_id,
+                            ...variationObject,
+                        },
+                    }
+                );
+            }
+        }
+
+        return res.json({
+            /*result:"success"*/
         });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({
+            /*result: "failure"*/
+        });
+    }
 });
 
 app.get("/stripe/success", async (req, res) => {
