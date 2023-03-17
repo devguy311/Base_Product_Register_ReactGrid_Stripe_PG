@@ -214,7 +214,6 @@ app.post("/product", async (req, res) => {
                 },
             }
         );
-        console.log(response.data.item.item_id);
 
         let sliced = [];
 
@@ -226,7 +225,6 @@ app.post("/product", async (req, res) => {
                     variationObject[`variation[${idx}]`] = t.name;
                     variationObject[`variation_stock[${idx}]`] = t.stock;
                 });
-                console.log(variationObject);
 
                 await axios.post(
                     "https://api.thebase.in/1/items/edit",
