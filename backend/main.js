@@ -206,11 +206,24 @@ app.post("/product", async (req, res) => {
                 },
                 params: {
                     title: req.body.title,
-                    detail: req.body.detail,
                     price: Math.max(req.body.price, 50),
                     identifier: req.body.identifier,
                     stock: req.body.stock || 0,
                     visible: process.env.MODE === "LIVE" ? 1 : 0,
+                },
+            }
+        );
+
+        await axios.post(
+            "https://api.thebase.in/1/items/edit",
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${req.body.accessToken}`,
+                },
+                params: {
+                    item_id: response.data.item.item_id,
+                    detail: req.body.detail,
                 },
             }
         );
@@ -222,6 +235,7 @@ app.post("/product", async (req, res) => {
             if (sliced.length !== 0) {
                 let variationObject = {};
                 sliced.forEach((t, idx) => {
+                    variationObject[`variation_id[${idx}]`] = "";
                     variationObject[`variation[${idx}]`] = t.name;
                     variationObject[`variation_stock[${idx}]`] = t.stock;
                 });

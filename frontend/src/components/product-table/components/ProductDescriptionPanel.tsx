@@ -215,7 +215,7 @@ const ProductDescriptionPanel = (props: any) => {
                         title: props.productName,
                         detail: `${header}\n\n${productDescriptionToCopy}\n\n${footer}\n\n${identifier}`,
                         price,
-                        identifier,
+                        identifier: `list${identifier}`,
                         ...(productVariations.length === 0 ? { stock: itemStock } : { variations: productVariations }),
                     })
                     .then(() => setSavingStatus(SavingStatus.SAVED))
@@ -449,7 +449,14 @@ const ProductDescriptionPanel = (props: any) => {
                                 {productVariations.length === 0 && (
                                     <TextField size="small" sx={{ mr: 1 }} value={itemStock} label="在庫数" type="number" onChange={handleItemStock} />
                                 )}
-                                <TextField size="small" value={identifier} label="商品コード" placeholder="list****" onChange={handleIdentifier} />
+                                <TextField
+                                    size="small"
+                                    value={identifier}
+                                    label="商品コード"
+                                    type="number"
+                                    placeholder="list****"
+                                    onChange={handleIdentifier}
+                                />
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>
