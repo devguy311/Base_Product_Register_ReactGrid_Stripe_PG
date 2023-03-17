@@ -49,6 +49,7 @@ const ProductDescriptionPanel = (props: any) => {
     const [colorBaseList, setColorBaseList] = useState<string[]>([]);
     const [itemSizes, setItemSizes] = useState<number[][]>([]);
     const [itemStocks, setItemStocks] = useState<number[][]>([]);
+    const [stockAutoFillValue, setStockAutoFillValue] = useState(0);
     const [productDescriptionToCopy, setProductDescriptionToCopy] = useState("");
     const [productVariations, setProductVariations] = useState<ProductVariation[]>([]);
     const [header, setHeader] = useState("");
@@ -135,12 +136,15 @@ const ProductDescriptionPanel = (props: any) => {
         );
     };
 
-    const handleStockAutoFill = (index: number) => {
+    const handleStockAutoFillValue = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setStockAutoFillValue(parseInt(e.target.value));
+    };
+
+    const handleStockAutoFill = () => {
         setItemStocks(
-            itemStocks.map((t, idx) => {
-                return t.map((t, jdx) => {
-                    if (jdx <= index) return t;
-                    return itemStocks[idx][index] === undefined || itemStocks[idx][index] <= 0 ? t : itemStocks[idx][index];
+            itemStocks.map((t) => {
+                return t.map(() => {
+                    return stockAutoFillValue;
                 });
             })
         );
@@ -215,7 +219,7 @@ const ProductDescriptionPanel = (props: any) => {
                         title: props.productName,
                         detail: `${header}\n\n${productDescriptionToCopy}\n\n${footer}\n\n${identifier}`,
                         price,
-                        identifier: `list${identifier}`,
+                        identifier,
                         ...(productVariations.length === 0 ? { stock: itemStock } : { variations: productVariations }),
                     })
                     .then(() => setSavingStatus(SavingStatus.SAVED))
@@ -251,7 +255,7 @@ const ProductDescriptionPanel = (props: any) => {
         <>
             <Stepper activeStep={activeStep} orientation="vertical">
                 <Step key={0}>
-                    <StepLabel>ステップ　一</StepLabel>
+                    <StepLabel>ステップ　1</StepLabel>
                     <StepContent>
                         <Grid container spacing={2}>
                             <Grid item xs={2}>
@@ -328,7 +332,7 @@ const ProductDescriptionPanel = (props: any) => {
                 </Step>
                 <Step key={1}>
                     <StepLabel>
-                        ステップ　ニ　
+                        ステップ　2　
                         {activeStep === 1 && (
                             <Button size="small" variant="outlined" onClick={handleBack}>
                                 戻る
@@ -340,7 +344,7 @@ const ProductDescriptionPanel = (props: any) => {
                             {itemList.length !== 0 && (
                                 <>
                                     <Grid item xs={12}>
-                                        サイズ(cm)
+                                        <strong>サイズ(cm)</strong>
                                     </Grid>
                                     {sizeList.map((size, idx) => (
                                         <Grid key={idx} item display={"flex"} xs={12}>
@@ -378,16 +382,19 @@ const ProductDescriptionPanel = (props: any) => {
                             {colorList.length !== 0 && (
                                 <>
                                     <Grid item xs={12}>
-                                        バリエーション
+                                        <strong>バリエーション</strong>
+                                        <TextField
+                                            size="small"
+                                            value={stockAutoFillValue}
+                                            sx={{ pl: 1, pr: 1 }}
+                                            type="number"
+                                            onChange={handleStockAutoFillValue}
+                                        />
+                                        <Button onClick={handleStockAutoFill}>一括入力</Button>
                                     </Grid>
                                     {sizeList.map((size, idx) => (
                                         <Grid key={idx} item display="flex" xs={12}>
-                                            <Grid item xs={1} sx={{ pt: 0.5 }} style={{ textAlign: "right" }}>
-                                                <Button size="small" onClick={() => handleStockAutoFill(idx)}>
-                                                    ¦¦
-                                                </Button>
-                                            </Grid>
-                                            <Grid item display={"flex"} xs={11}>
+                                            <Grid item display={"flex"} xs={12}>
                                                 {colorList.map((color, jdx) => (
                                                     <TextField
                                                         key={jdx}
@@ -420,7 +427,7 @@ const ProductDescriptionPanel = (props: any) => {
                 </Step>
                 <Step key={2}>
                     <StepLabel optional={<Typography variant="caption">最後</Typography>}>
-                        ステップ　三　
+                        ステップ　3　
                         {activeStep === 2 && (
                             <Button size="small" variant="outlined" onClick={handleBack}>
                                 戻る
@@ -449,14 +456,7 @@ const ProductDescriptionPanel = (props: any) => {
                                 {productVariations.length === 0 && (
                                     <TextField size="small" sx={{ mr: 1 }} value={itemStock} label="在庫数" type="number" onChange={handleItemStock} />
                                 )}
-                                <TextField
-                                    size="small"
-                                    value={identifier}
-                                    label="商品コード"
-                                    type="number"
-                                    placeholder="list****"
-                                    onChange={handleIdentifier}
-                                />
+                                <TextField size="small" value={identifier} label="商品コード" onChange={handleIdentifier} />
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>

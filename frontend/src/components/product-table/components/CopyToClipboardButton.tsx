@@ -14,7 +14,7 @@ const CopyToClipboardButton = (props: any) => {
         <>
             <IconButton onClick={handleClick} color="primary" disabled={props.disabled}>
                 {!props.disabled && (
-                    <Badge badgeContent={props.textToCopy.replace(/[\u0080-\u10FFFF]/g, "x").length} color="primary">
+                    <Badge badgeContent={props.textToCopy.replace(/[\u0080-\u10FFFF]/g, "x").length} max={360} color="primary">
                         <CopyAll />
                     </Badge>
                 )}
