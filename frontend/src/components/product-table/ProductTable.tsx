@@ -488,7 +488,7 @@ const ProductTable = (props: any) => {
                 <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
                     <ReplayRounded color="primary" />
                 </IconButton>
-                <IconButton sx={{ mb: 1 }} onClick={handleRemoveAll}>
+                <IconButton sx={{ mb: 1 }} style={{ position: "absolute", right: 32 }} onClick={handleRemoveAll}>
                     <DeleteForeverRounded color="primary" />
                 </IconButton>
             </div>
