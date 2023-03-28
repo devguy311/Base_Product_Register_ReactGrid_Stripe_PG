@@ -6,6 +6,7 @@ import {
     Button,
     ButtonGroup,
     CircularProgress,
+    FormHelperText,
     MenuItem,
     Select,
     SelectChangeEvent,
@@ -116,13 +117,17 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     const handleItemList = (_event: SyntheticEvent, newValue: string[]) => {
-        setItemList(newValue);
-        setItemSizes(init2DArray(sizeList.length, newValue.length));
+        if (newValue.length < 5) {
+            setItemList(newValue);
+            setItemSizes(init2DArray(sizeList.length, newValue.length));
+        }
     };
 
     const handleColorList = (_event: SyntheticEvent, newValue: string[]) => {
-        setColorList(newValue);
-        setItemStocks(init2DArray(newValue.length, sizeList.length));
+        if (newValue.length < 5) {
+            setColorList(newValue);
+            setItemStocks(init2DArray(newValue.length, sizeList.length));
+        }
     };
 
     const handleSizeAutoIncrement = (index: number, increaseRate: number) => {
@@ -303,7 +308,9 @@ const ProductDescriptionPanel = (props: any) => {
                                     getOptionLabel={(option) => option || ""}
                                     filterSelectedOptions
                                     renderInput={(params) => <TextField {...params} />}
+                                    noOptionsText="オプションなし"
                                 />
+                                <FormHelperText>{(itemList || []).length}/4</FormHelperText>
                             </Grid>
                             <Grid item xs={2}>
                                 色展開
@@ -318,7 +325,9 @@ const ProductDescriptionPanel = (props: any) => {
                                     getOptionLabel={(option) => option || ""}
                                     filterSelectedOptions
                                     renderInput={(params) => <TextField {...params} />}
+                                    noOptionsText="オプションなし"
                                 />
+                                <FormHelperText>{(colorList || []).length}/4</FormHelperText>
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>

@@ -1,4 +1,4 @@
-import React, { SyntheticEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -8,6 +8,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 import SettingPanel from "../components/SettingPanel";
 import ProductPanel from "../components/ProductPanel";
+import TopRightButtons from "../components/TopRightButtons";
 import { LoadingStatus, PaymentStatus, User } from "../types/index.d";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
@@ -186,11 +187,13 @@ const HomePage = () => {
                             <Tab label="バッグ・財布" {...a11yProps(3)} />
                             <Tab label="ドレス" {...a11yProps(4)} />
                             <Tab label="水着" {...a11yProps(5)} />
-                            <Tab label="テンプレート　一" {...a11yProps(6)} />
-                            <Tab label="テンプレート　ニ" {...a11yProps(7)} />
-                            <Tab label="テンプレート　三" {...a11yProps(8)} />
-                            <Tab label="テンプレート　四" {...a11yProps(9)} />
-                            <Tab label="テンプレート　五" {...a11yProps(10)} />
+                            <Tab label="テンプレート 1" {...a11yProps(6)} />
+                            <Tab label="テンプレート 2" {...a11yProps(7)} />
+                            <Tab label="テンプレート 3" {...a11yProps(8)} />
+                            <Tab label="テンプレート 4" {...a11yProps(9)} />
+                            <Tab label="テンプレート 5" {...a11yProps(10)} />
+
+                            <TopRightButtons />
                         </Tabs>
                     </Box>
                     {tabIndex === 0 && <SettingPanel user={user} />}
@@ -199,11 +202,11 @@ const HomePage = () => {
                     {tabIndex === 3 && <ProductPanel email={user?.mail_address} no={2} tabName={"バッグ・財布"} />}
                     {tabIndex === 4 && <ProductPanel email={user?.mail_address} no={3} tabName={"ドレス"} />}
                     {tabIndex === 5 && <ProductPanel email={user?.mail_address} no={4} tabName={"水着"} />}
-                    {tabIndex === 6 && <ProductPanel email={user?.mail_address} no={5} tabName={"テンプレート　一"} />}
-                    {tabIndex === 7 && <ProductPanel email={user?.mail_address} no={6} tabName={"テンプレート　ニ"} />}
-                    {tabIndex === 8 && <ProductPanel email={user?.mail_address} no={7} tabName={"テンプレート　三"} />}
-                    {tabIndex === 9 && <ProductPanel email={user?.mail_address} no={8} tabName={"テンプレート　四"} />}
-                    {tabIndex === 10 && <ProductPanel email={user?.mail_address} no={9} tabName={"テンプレート　五"} />}
+                    {tabIndex === 6 && <ProductPanel email={user?.mail_address} no={5} tabName={"テンプレート 1"} />}
+                    {tabIndex === 7 && <ProductPanel email={user?.mail_address} no={6} tabName={"テンプレート 2"} />}
+                    {tabIndex === 8 && <ProductPanel email={user?.mail_address} no={7} tabName={"テンプレート 3"} />}
+                    {tabIndex === 9 && <ProductPanel email={user?.mail_address} no={8} tabName={"テンプレート 4"} />}
+                    {tabIndex === 10 && <ProductPanel email={user?.mail_address} no={9} tabName={"テンプレート 5"} />}
                 </>
             )}
         </>

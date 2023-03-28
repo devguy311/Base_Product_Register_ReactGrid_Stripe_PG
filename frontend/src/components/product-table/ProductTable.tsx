@@ -1,9 +1,9 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import axios from "axios";
 import { read, utils, writeFile } from "xlsx";
 import { ReactGrid, Column, Row, CellChange, SelectionMode, Id, MenuOption, TextCell } from "@silevis/reactgrid";
 import { Button, IconButton } from "@mui/material";
-import { Backup, DeleteForeverRounded, Download, RefreshRounded, ReplayRounded, Upload } from "@mui/icons-material";
+import { BackupOutlined, DeleteForeverRounded, Download, RefreshRounded, /*ReplayRounded*,*/ Upload } from "@mui/icons-material";
 import "@silevis/reactgrid/styles.css";
 
 import { ProductKeyword, CheckboxData, ExcelData, CopyToClipboardButton, AddProductDialog } from "./index.d";
@@ -82,7 +82,7 @@ const getRows = (data: CheckboxData[][]): Row[] => [
 ];
 
 const ProductTable = (props: any) => {
-    const [file, setFile] = useState<File>();
+    const [, /*file*/ setFile] = useState<File>();
     const [isSaving, setIsSaving] = useState(false);
     const [header, setHeader] = useState<Row>(getHeader((props.source as ProductKeyword[]) || []));
     const [footer, setFooter] = useState<Row>(getFooter((props.source as ProductKeyword[]) || []));
@@ -298,10 +298,10 @@ const ProductTable = (props: any) => {
             });
     };
 
-    const handleDiscard = () => {
-        if (file === undefined) loadFromSource(props.source);
-        else loadFromFile(file);
-    };
+    // const handleDiscard = () => {
+    //     if (file === undefined) loadFromSource(props.source);
+    //     else loadFromFile(file);
+    // };
 
     const handleRemoveAll = () => {
         setHeader(getHeader([]));
@@ -472,7 +472,7 @@ const ProductTable = (props: any) => {
                     <Download /> Excelダウンロード
                 </Button>
 
-                <Button size="small" sx={{ mb: 1 }} variant="outlined" component="label">
+                <Button size="small" sx={{ mb: 1, mr: 1 }} variant="outlined" component="label">
                     <Upload /> Excelロード
                     <input
                         hidden
@@ -482,12 +482,12 @@ const ProductTable = (props: any) => {
                     />
                 </Button>
 
-                <IconButton sx={{ mb: 1 }} onClick={handleSave} disabled={isSaving}>
-                    <Backup color={!isSaving ? "primary" : "inherit"} />
-                </IconButton>
-                <IconButton sx={{ mb: 1 }} onClick={handleDiscard}>
+                <Button size="small" sx={{ mb: 1 }} variant="outlined" onClick={handleSave} disabled={isSaving}>
+                    <BackupOutlined sx={{ mr: 1 }} color={!isSaving ? "primary" : "inherit"} /> 保存
+                </Button>
+                {/* <IconButton sx={{ mb: 1 }} style={{ position: "absolute", right: 64 }} onClick={handleDiscard}>
                     <ReplayRounded color="primary" />
-                </IconButton>
+                </IconButton> */}
                 <IconButton sx={{ mb: 1 }} style={{ position: "absolute", right: 32 }} onClick={handleRemoveAll}>
                     <DeleteForeverRounded color="primary" />
                 </IconButton>

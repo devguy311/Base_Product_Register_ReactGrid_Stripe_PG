@@ -108,6 +108,7 @@ const SettingPanel = (props: any) => {
                                     filterSelectedOptions
                                     fullWidth
                                     renderInput={(params) => <TextField {...params} />}
+                                    noOptionsText="オプションなし"
                                 />
                             </Grid>
                             <Grid item xs={12} sx={{ mb: 2 }}>
@@ -134,6 +135,7 @@ const SettingPanel = (props: any) => {
                                     filterSelectedOptions
                                     fullWidth
                                     renderInput={(params) => <TextField {...params} />}
+                                    noOptionsText="オプションなし"
                                 />
                             </Grid>
                             <Button variant="contained" disabled={isSaving} onClick={handleSubmit}>
