@@ -67,7 +67,7 @@ const inviteTable = () => {
         (
              email          VARCHAR(50) NOT NULL,
              token          VARCHAR(48) NOT NULL,
-             owner_auth_token   VARCHAR(32) NOT NULL,
+             owner_auth_token   VARCHAR(32) NOT NULL
         )
     `)
 }
@@ -380,7 +380,8 @@ app.post("/invite", async (req, res) => {
                 if (error)
                     return res.status(404).json({error});
                 const inviteLink = (process.env.APP_URL || "http://localhost:3000/") + "invite/" + key;
-                mailSender(req.body.email, inviteLink);
+                console.log(req.body.email + " ," + req.body.owner_auth_token);
+                // mailSender(req.body.email, inviteLink);
             });
             return res.json({invited: true});
         }
