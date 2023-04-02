@@ -1,10 +1,11 @@
 import { Button } from "@mui/material";
 
 const TopRightButtons = () => {
+    const logout = () => {
+    }
     return (
         <>
-            <Button>ログアウト</Button>
-            <Button>ログイン</Button>
+            <Button onClick={logout}>ログイン</Button>
         </>
     );
 };

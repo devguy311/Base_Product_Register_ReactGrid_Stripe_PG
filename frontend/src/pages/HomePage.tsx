@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import axios from "axios";
-import { Backdrop, Card, CardActionArea, CardActions, CardContent, CircularProgress, Link, Stack, Typography } from "@mui/material";
+import { Backdrop, Button, Card, CardActionArea, CardActions, CardContent, CircularProgress, Link, Stack, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 import SettingPanel from "../components/SettingPanel";
@@ -13,6 +13,7 @@ import { LoadingStatus, PaymentStatus, User } from "../types/index.d";
 import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
 import getStripe from "../lib/getStripe";
+import InvitePanel from "../components/InvitePanel";
 
 const a11yProps = (index: number) => {
     return {
@@ -120,12 +121,15 @@ const HomePage = () => {
                 </Backdrop>
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] === undefined && (
-                <Link
+                <Button variant="outlined"
                     href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`}
                 >
                     認可する
-                </Link>
+                </Button>
             )}
+                <Button variant="outlined">
+                    Bot Login
+                </Button>
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus === PaymentStatus.UNPAID && (
                 <Stack direction="row" spacing={2}>
                     <Card sx={{ maxWidth: 345 }}>
@@ -192,6 +196,7 @@ const HomePage = () => {
                             <Tab label="テンプレート 3" {...a11yProps(8)} />
                             <Tab label="テンプレート 4" {...a11yProps(9)} />
                             <Tab label="テンプレート 5" {...a11yProps(10)} />
+                            <Tab label="Bot" {...a11yProps(11)} />
 
                             <TopRightButtons />
                         </Tabs>
@@ -207,6 +212,7 @@ const HomePage = () => {
                     {tabIndex === 8 && <ProductPanel email={user?.mail_address} no={7} tabName={"テンプレート 3"} />}
                     {tabIndex === 9 && <ProductPanel email={user?.mail_address} no={8} tabName={"テンプレート 4"} />}
                     {tabIndex === 10 && <ProductPanel email={user?.mail_address} no={9} tabName={"テンプレート 5"} />}
+                    {tabIndex === 11 && <InvitePanel />}
                 </>
             )}
         </>
