@@ -86,26 +86,18 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
 
   const sendInvite = () => {
     const auth_code = localStorage.getItem("authorization_code");
-    let success = 0;
     mailList.forEach((email) => {
       const data = { email: email, owner_auth_token: auth_code };
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
-        if (result.data.invited === true) success = 0;
-        else if (result.data.invited === false) success = 1;
-        else success = 2;
+        setInvited(result.data.invited);
       });
     });
-    if (success === 0) {
-      setInvited(1);
-      setMailList([]);
-    }
-    else if (success === 1) setInvited(2);
-    else if (success === 2) setInvited(3);
   }
 
   const handleCloseModal = () => {
-    handleClose();
+    setMailList([]);
     setInvited(0);
+    handleClose();
   }
 
   return (
@@ -115,7 +107,7 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
       open={isOpen}
       fullWidth
     >
-      <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
+      <BootstrapDialogTitle id="customized-dialog-title" onClose={handleCloseModal}>
         Modal title
       </BootstrapDialogTitle>
       <DialogContent dividers>

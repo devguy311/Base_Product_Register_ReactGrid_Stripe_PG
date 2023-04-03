@@ -84,15 +84,15 @@ const mailSender = (email, text) => {
             pass: 'qinnfhobeqpebvsz'
         }
     });
-    
+
     const mailOptions = {
         from: 'vulpeswhiteint98@gmail.com',
         to: email,
         subject: 'Invite',
         text: text
     };
-    
-    transporter.sendMail(mailOptions, function(error, info){
+
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
             return false;
@@ -127,8 +127,7 @@ app.get("/descriptions", (req, res) => {
 
 app.post("/descriptions", (req, res) => {
     pool.query(
-        `UPDATE users SET descriptions[${req.body.no}] = '${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${
-            req.body.email
+        `UPDATE users SET descriptions[${req.body.no}] = '${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${req.body.email
         }'`,
         (error) => {
             if (error) return res.status(400).json({ error });
@@ -234,8 +233,7 @@ app.post("/product/info", (req, res) => {
     pool.query(`SELECT * FROM users WHERE email = '${req.body.email}'`, (error, result) => {
         if (error || result.rows.length === 0) return res.status(404).json({ error });
         pool.query(
-            `UPDATE users SET items = '${req.body.itemList.join(",\t")}', colors = '${req.body.colorList.join(",\t")}', header = '${
-                req.body.header
+            `UPDATE users SET items = '${req.body.itemList.join(",\t")}', colors = '${req.body.colorList.join(",\t")}', header = '${req.body.header
             }', footer = '${req.body.footer}' WHERE email = '${req.body.email}'`,
             (error) => {
                 if (error) return res.status(400).json({ error });
@@ -369,37 +367,51 @@ app.post("/stripe/check", async (req, res) => {
 app.post("/invite", async (req, res) => {
     const randomBytes = crypto.randomBytes(16);
     const iCode = randomBytes.toString('hex');
-    let isInvited = false;
-    pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
-        if (error) return result.status(404).json({error});
-        if (result.rows.length > 0) isInvited = true;
-    });
-    pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`, async (error, result) => {
-        if (error) return result.status(404).json({error});
-        if (result.rows.length > 0) isInvited = true;
-    });
-    if (isInvited){
-        pool.query(`INSERT INTO invitation (email, token, owner_auth_token) VALUES ('${req.body.email}', '${iCode}', '${req.body.owner_auth_token}')`, async (error) => {
-            if (error)
-                return res.status(404).json({error});
-            const inviteLink = (process.env.APP_URL || "http://localhost:3000") + "/invite/" + iCode;
-            mailSender(req.body.email, inviteLink);
-        });
-        return res.json({invited: true});
+    const email = req.body.email;
+    const authToken = req.body.owner_auth_token;
+    let queryResult;
+
+    try {
+        // Check if email exists in invitation table
+        queryResult = await pool.query('SELECT * FROM invitation WHERE email = $1', [email]);
+
+        if (queryResult.rows.length === 0) {
+            // Check if email exists in bots table
+            queryResult = await pool.query('SELECT * FROM bots WHERE email = $1', [email]);
+
+            if (queryResult.rows.length === 0) {
+                // Insert new invitation 
+                queryResult = await pool.query('INSERT INTO invitation (email, token, owner_auth_token) VALUES ($1, $2, $3)', [email, iCode, authToken]);
+
+                const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invite/' + iCode;
+
+                if (mailSender(email, inviteLink)) {
+                    return res.json({ invited: 1 });
+                } else {
+                    return res.json({ invited: 3 });
+                }
+            } else {
+                return res.json({ invited: 2 });
+            }
+        } else {
+            return res.json({ invited: 2 });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: error.message });
     }
-    else return res.json({invited: false});
 });
 
 app.get("/getBots", async (req, res) => {
     pool.query(`SELECT * FROM invitation WHERE owner = '${req.body.owner}'`, async (error, result) => {
-        if (error) return res.status(404).json({error});
-        return res.json({result: "success", bots: result});
+        if (error) return res.status(404).json({ error });
+        return res.json({ result: "success", bots: result });
     });
 });
 
 app.get("/signup/bot", async (req, res) => {
     pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
-        if (error) return res.status(404).json({error});
+        if (error) return res.status(404).json({ error });
         // if (result.rows.at(0).)
     });
 });
