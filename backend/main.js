@@ -66,7 +66,7 @@ const inviteTable = () => {
     pool.query(`CREATE TABLE IF NOT EXISTS invitation
         (
              email          VARCHAR(50) NOT NULL,
-             token          VARCHAR(48) NOT NULL,
+             token          VARCHAR(32) NOT NULL,
              owner_auth_token   VARCHAR(32) NOT NULL
         )
     `)
@@ -362,30 +362,26 @@ app.post("/stripe/check", async (req, res) => {
 });
 
 app.post("/invite", async (req, res) => {
-    inviteID = crypto.randomBytes(48, function(err, buffer) {
-        let key = buffer.toString('base64');
-        let isInvited = false;
-        pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
-            if (error) return result.status(404).json({error});
-            else if (result.rows.length === 0 || result.rows[0].subscription === null) isInvited = false;
-            else isInvited = true;
-        });
-        pool.query(`SELECT subscription FROM users WHERE email = '${req.body.email}'`, async (error, result) => {
-            if (error) return result.status(404).json({error});
-            else if (result.rows.length === 0 || result.rows[0].subscription === null) isInvited = false;
-            else isInvited = true;
-        });
-        if (isInvited == false){
-            pool.query(`INSERT INTO invitation (email, token, owner_auth_token) VALUES ('${req.body.email}', '${key}', '${req.body.owner_auth_token}')`, async (error) => {
-                if (error)
-                    return res.status(404).json({error});
-                const inviteLink = (process.env.APP_URL || "http://localhost:3000/") + "invite/" + key;
-                console.log(req.body.email + " ," + req.body.owner_auth_token);
-                // mailSender(req.body.email, inviteLink);
-            });
-            return res.json({invited: true});
-        }
+    const randomBytes = crypto.randomBytes(16);
+    const iCode = randomBytes.toString('hex');
+    let isInvited = false;
+    pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
+        if (error) return result.status(404).json({error});
+        else if (result.rows.length > 0) isInvited = true;
     });
+    pool.query(`SELECT subscription FROM users WHERE email = '${req.body.email}'`, async (error, result) => {
+        if (error) return result.status(404).json({error});
+        else if (result.rows.length > 0) isInvited = true;
+    });
+    if (isInvited == false){
+        pool.query(`INSERT INTO invitation (email, token, owner_auth_token) VALUES ('${req.body.email}', '${iCode}', '${req.body.owner_auth_token}')`, async (error) => {
+            if (error)
+                return res.status(404).json({error});
+            const inviteLink = (process.env.APP_URL || "http://localhost:3000/") + "invite/" + iCode;
+            mailSender(req.body.email, inviteLink);
+        });
+        return res.json({invited: true});
+    }
 });
 
 app.get("/getBots", async (req, res) => {

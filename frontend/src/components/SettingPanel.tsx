@@ -129,7 +129,6 @@ const SettingPanel = (props: any) => {
                                         if (inputValue !== "" && !isExisting) {
                                             filtered.push(inputValue);
                                         }
-
                                         return filtered;
                                     }}
                                     filterSelectedOptions
