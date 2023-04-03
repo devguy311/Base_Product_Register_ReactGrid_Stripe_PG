@@ -370,7 +370,6 @@ app.post("/invite", async (req, res) => {
     const randomBytes = crypto.randomBytes(16);
     const iCode = randomBytes.toString('hex');
     let isInvited = false;
-    pool.query(`DROP TABLE invitation`);
     pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error) return result.status(404).json({error});
         if (result.rows.length > 0) isInvited = true;
