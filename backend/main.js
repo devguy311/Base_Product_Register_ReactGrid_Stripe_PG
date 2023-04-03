@@ -77,7 +77,7 @@ botTable();
 inviteTable();
 
 const mailSender = (email, text) => {
-    let transporter = nodemailer.createTransport({
+    const transporter = mailer.createTransport({
         service: 'gmail',
         auth: {
             user: 'vulpeswhiteint98@gmail.com',
@@ -85,7 +85,7 @@ const mailSender = (email, text) => {
         }
     });
     
-    let mailOptions = {
+    const mailOptions = {
         from: 'vulpeswhiteint98@gmail.com',
         to: email,
         subject: 'Invite',
@@ -93,8 +93,13 @@ const mailSender = (email, text) => {
     };
     
     transporter.sendMail(mailOptions, function(error, info){
-        if (error) return false;
-        return true;
+        if (error) {
+            console.log(error);
+            return false;
+        } else {
+            console.log('Email sent: ' + info.response);
+            return true;
+        }
     });
 }
 
