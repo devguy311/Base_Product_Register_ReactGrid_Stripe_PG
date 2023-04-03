@@ -370,23 +370,25 @@ app.post("/invite", async (req, res) => {
     const randomBytes = crypto.randomBytes(16);
     const iCode = randomBytes.toString('hex');
     let isInvited = false;
+    pool.query(`DROP TABLE invitation`);
     pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error) return result.status(404).json({error});
-        else if (result.rows.length > 0) isInvited = true;
+        if (result.rows.length > 0) isInvited = true;
     });
-    pool.query(`SELECT subscription FROM users WHERE email = '${req.body.email}'`, async (error, result) => {
+    pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error) return result.status(404).json({error});
-        else if (result.rows.length > 0) isInvited = true;
+        if (result.rows.length > 0) isInvited = true;
     });
-    if (isInvited == false){
+    if (isInvited){
         pool.query(`INSERT INTO invitation (email, token, owner_auth_token) VALUES ('${req.body.email}', '${iCode}', '${req.body.owner_auth_token}')`, async (error) => {
             if (error)
                 return res.status(404).json({error});
-            const inviteLink = (process.env.APP_URL || "http://localhost:3000/") + "invite/" + iCode;
+            const inviteLink = (process.env.APP_URL || "http://localhost:3000") + "/invite/" + iCode;
             mailSender(req.body.email, inviteLink);
         });
         return res.json({invited: true});
     }
+    else return res.json({invited: false});
 });
 
 app.get("/getBots", async (req, res) => {

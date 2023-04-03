@@ -1,4 +1,4 @@
-import {SyntheticEvent, useState} from 'react';
+import { SyntheticEvent, useState } from 'react';
 import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import Dialog from '@mui/material/Dialog';
@@ -7,11 +7,12 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import Autocomplete, {createFilterOptions} from '@mui/material/Autocomplete';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { Box, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import axios from "axios"
+import AlertBar from './Alert';
 
 const filter = createFilterOptions<string>();
 
@@ -62,17 +63,18 @@ function BootstrapDialogTitle(props: DialogTitleProps) {
   );
 }
 
-const checkEmailType = (value : string) => {
+const checkEmailType = (value: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(value);
 }
 
 const InvitationDialog = ({ isOpen, handleClose }: Props) => {
-  
+
   const [mailList, setMailList] = useState<string[]>([]);
   const [isValid, setIsValid] = useState(true);
+  const [invited, setInvited] = useState(0);
 
-  const handleChange = (event : SyntheticEvent, newValue: string[]) => {
+  const handleChange = (event: SyntheticEvent, newValue: string[]) => {
     setMailList(newValue);
     let flag: boolean = false;
     newValue.forEach((value) => {
@@ -84,63 +86,76 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
 
   const sendInvite = () => {
     const auth_code = localStorage.getItem("authorization_code");
+    let success = 0;
     mailList.forEach((email) => {
-      const data = {email: email, owner_auth_token: auth_code};
+      const data = { email: email, owner_auth_token: auth_code };
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
-        if (result.data.invited === true){
-          console.log("invited");
-        }else console.log("error occured!");
+        if (result.data.invited === true) success = 0;
+        else if (result.data.invited === false) success = 1;
+        else success = 2;
       });
-    }); 
+    });
+    if (success === 0) {
+      setInvited(1);
+      setMailList([]);
+    }
+    else if (success === 1) setInvited(2);
+    else if (success === 2) setInvited(3);
+  }
+
+  const handleCloseModal = () => {
+    handleClose();
+    setInvited(0);
   }
 
   return (
-      <BootstrapDialog
-        onClose={handleClose}
-        aria-labelledby="customized-dialog-title"
-        open={isOpen}
-        fullWidth
-      >
-        <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
-          Modal title                             
-        </BootstrapDialogTitle>
-        <DialogContent dividers>
-          <Typography>Invite Bots for your use.</Typography>
-          <Autocomplete
-            multiple
-            id="tags-outlined"
-            options={list}
-            value = {mailList}
-            onChange = {handleChange}
-            getOptionLabel={(option) => option || ""}
-            filterSelectedOptions
-            filterOptions={(options, params) => {
-              const filtered = filter(options, params);
+    <BootstrapDialog
+      onClose={handleCloseModal}
+      aria-labelledby="customized-dialog-title"
+      open={isOpen}
+      fullWidth
+    >
+      <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
+        Modal title
+      </BootstrapDialogTitle>
+      <DialogContent dividers>
+        <Typography>Invite Bots for your use.</Typography>
+        <Autocomplete
+          multiple
+          id="tags-outlined"
+          options={list}
+          value={mailList}
+          onChange={handleChange}
+          getOptionLabel={(option) => option || ""}
+          filterSelectedOptions
+          filterOptions={(options, params) => {
+            const filtered = filter(options, params);
 
-              const { inputValue } = params;
-              // Suggest the creation of a new value
-              const isExisting = options.some((option) => inputValue === option);
-              if (inputValue !== "" && !isExisting) {
-                  filtered.push(inputValue);
-              }
-              return filtered;
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                error = {!isValid}
-                helperText= {isValid === true ? "" : "incorrect email"}
-                placeholder="name@gmail.com"
-              />
-            )}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button autoFocus  onClick={sendInvite} variant="contained" endIcon={<SendIcon/>}>
-            Send Invite
-          </Button>
-        </DialogActions>
-      </BootstrapDialog>
+            const { inputValue } = params;
+            // Suggest the creation of a new value
+            const isExisting = options.some((option) => inputValue === option);
+            if (inputValue !== "" && !isExisting) {
+              filtered.push(inputValue);
+            }
+            return filtered;
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              error={!isValid}
+              helperText={isValid === true ? "" : "incorrect email"}
+              placeholder="name@gmail.com"
+            />
+          )}
+        />
+        {invited === 1 ? <AlertBar alertType='success' message='Successfully Invited!' /> : (invited === 2 ? <AlertBar alertType='warning' message='Already Invited!' /> : ( invited === 3 ? <AlertBar alertType='error' message='An Error Occured!' /> : ""))}
+      </DialogContent>
+      <DialogActions>
+        <Button autoFocus onClick={sendInvite} variant="contained" endIcon={<SendIcon />}>
+          Send Invite
+        </Button>
+      </DialogActions>
+    </BootstrapDialog>
   );
 }
 
