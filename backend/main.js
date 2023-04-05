@@ -8,6 +8,7 @@ const stripe = require("stripe")(
 );
 const crypto = require('crypto');
 const mailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 
 const DEFAULT_TEMPLATE_1 =
     "自由記入:\tスカート\n,\tフレンチスクエア\n,\tニットセーター\n,\tラビットファーセーター\n,\tバフスリーブ\n,\tストライプ　シャツ\n,\tレトロ\n,\tデニム スカート\n,\tリブニット\n,\tリブニット\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t大\n:\tトップス\n,\tスカート\n,\tボトムス\n,\tパンツ\n,\tアウター\n,\tワンピース\n,\tセットアップ\n,\tルームウェア\n,\tパジャマ\n,\t迷彩\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t中\n:\tTシャツ\n,\tシャツ\n,\tブラウス\n,\tカットソー\n,\tニットソー\n,\tセーター\n,\tカーディガン\n,\tプルオーバー\n,\tパーカー\n,\tトレーナー\n,\tベスト\n,\tフーディー\n,\tオールインワン\n,\tサロペット\n,\tチュニック\n,\tコート\n,\tブルゾン\n,\tジャケット\n,\tシャンパー\n,\tGジャン\n,\tGパン\n,\tズボン\n,\t上着\n,\tスーツ\n,\tスウェット\n,\tジャージ\n,\t部屋着\n,\t寝巻き\n,\tナイトウェア\n,\t着ぐるみ\n,\tコスプレ\n,\tレギンス\n,\tレギパン\n,\tキャミソール\n,\tガウン\n,\t着る毛布\n,\tネグリジェ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t小\n:\t白シャツ\n,\t白トップス\n,\tビッグT\n,\tジョガーパンツ\n,\tワイドパンツ\n,\tストレートパンツ\n,\tガウチョパンツ\n,\tジョガーパンツ\n,\tクロップドパンツ\n,\tデニムパンツ\n,\tスキニーパンツ\n,\tベイカーパンツ\n,\tサルエルパンツ\n,\tカラーパンツ\n,\tテーパードパンツ\n,\tバギーパンツ\n,\tショートパンツ\n,\tミニスカート\n,\tロングスカート\n,\tプリーツスカート\n,\tフレアスカート\n,\tチュールスカート\n,\tペンシルスカート\n,\tコクーンスカート\n,\tタイトスカート\n,\tニットスカート\n,\tデニムスカート\n,\tタックスカート\n,\tジャンパースカート\n,\tジャンスカ\n,\tもこもこアウター\n,\tボアブルゾン\n,\tロングコート\n,\tチェスターコート\n,\tトレンチコート\n,\tダウンコート\n,\tシャツワンピース\n,\tフレアワンピース\n,\tティアードワンピース\n,\tロジスワンピース\n,\tデニムワンピース\n,\tワンピドレス\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t丈\n:\tミニ\n,\tミニ丈\n,\tショート\n,\tショート丈\n,\t膝丈\n,\tひざ丈\n,\t膝上\n,\t膝下\n,\tミモレ\n,\tミモレ丈\n,\tロング\n,\tロング丈\n,\tマキシ\n,\tマキシ丈\n,\t9分丈\n,\tアンクル丈\n,\t7分丈\n,\tミディアム丈\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t袖\n:\t袖なし\n,\t袖あり\n,\tノースリーブ\n,\t半袖\n,\t5分袖\n,\t五分袖\n,\t7分袖\n,\t七分袖\n,\t長袖\n,\tボリューム袖\n,\tドルマンスリーブ\n,\tパフスリーブ\n,\tフレアスリーブ\n,\tフレンチスリーブ\n,\tホルンスリーブ\n,\tドロップショルダー\n,\t萌袖\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t首回り\n:\tVネック\n,\tUネック\n,\tラウンドネック\n,\tスクエアネック\n,\tカシュクール\n,\tハイネック\n,\tタートルネック\n,\tクルーネック\n,\tヘンリーネック\n,\tボートネック\n,\tオフショルダー\n,\tオフショル\n,\tワンショルダー\n,\tワンショル\n,\t襟付き\n,\t襟なし\n,\tスタンドカラー\n,\tホルターネック\n,\tハイネック\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t形\n:\tフレア\n,\tセミフレア\n,\tスリム\n,\tタイト\n,\t細身\n,\tストレート\n,\tワイド\n,\tガウチョ\n,\tペプラム\n,\tAライン\n,\tIライン\n,\tマーメイド\n,\tアシンメトリー\n,\t切り替えデザイン\n,\tドッキング\n,\tスマート\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tデザイン\n:\tプリーツ\n,\tレース\n,\t刺繍\n,\tチュール\n,\tシフォン\n,\tフリル\n,\tリボン\n,\tベルト\n,\tウエストマーク\n,\tウエストリボン\n,\tバックリボン\n,\tスリット\n,\tサイドスリット\n,\tバックスリット\n,\t切り替えデザイン\n,\tドッキング\n,\tバックシャン\n,\tバックコンシャス\n,\tもこもこ\n,\tモコモコ\n,\tふわふわ\n,\tフード付き\n,\tファスナー\n,\tポケット\n,\tハイウエスト\n,\tリブ\n,\t前開き\n,\t2way\n,\t3way\n,\tリバーシブル\n,\tウエストゴム\n,\tケーブルニット\n,\tリブニット\n,\tクロシェ\n,\t編み込み\n,\t透け感\n,\tシースルー\n,\t伸縮性\n,\tキルティング\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t素材\n:\t綿\n,\t麻\n,\tリネン\n,\tポリエステル\n,\tデニム\n,\tブルーデニム\n,\tカラーデニム\n,\tキルティング\n,\tニット\n,\tサマーニット\n,\tフリース\n,\tウール\n,\tダウン\n,\tボア\n,\tレザー\n,\tPU\n,\tファー\n,\tフェイクファー\n,\t薄手\n,\t厚手\n,\t裏起毛\n,\tフランネル\n,\tコーデュロイ\n,\tスウェード\n,\tベロア\n,\t異素材MIX\n,\tベルベット\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tセット\n:\t上下セット\n,\t2点セット\n,\t3点セット\n,\t4点セット\n,\t5点セット\n,\tツーピース\n,\tスリーピース\n,\tお得\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tイメージ\n:\tかわいい\n,\t大人可愛い\n,\tきれいめ\n,\tシンプル\n,\tカジュアル\n,\t大人\n,\t上品\n,\tおしゃれ\n,\tお洒落\n,\tかっこいい\n,\tレトロ\n,\tアジアン\n,\tエスニック\n,\tエキゾチック\n,\t大人可愛い\n,\t大人女子\n,\tこなれ感\n,\tラフ\n,\tメンズライク\n,\tマニッシュ\n,\tボーイッシュ\n,\tスポーティー\n,\tラブリー\n,\tキュート\n,\tガーリー\n,\tルーズ\n,\t個性的\n,\tクール\n,\tモード系\n,\tセクシー\n,\tエレガント\n,\tモダン\n,\t主役級\n,\t存在感\n,\tフォーマル\n,\tとろみ感\n,\t抜け感\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t柄\n:\t無地\n,\t柄\n,\t花柄\n,\t小花柄\n,\tフラワー\n,\tチェック柄\n,\t格子柄\n,\t千鳥格子\n,\tグレンチェック\n,\tドット柄\n,\t水玉\n,\tボーダー\n,\tストライプ\n,\tヒョウ柄\n,\tレオパード\n,\tセブラ柄\n,\t牛柄\n,\tアニマル柄\n,\tリーフ柄\n,\tボタニカル\n,\tプリント\n,\tキャラクター\n,\tシマ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t季節・行事\n:\t春\n,\t夏\n,\t秋\n,\t冬\n,\tオールシーズン\n,\tシーズンレス\n,\t誕生日\n,\t成人式\n,\t入学式\n,\t入園式\n,\t卒業式\n,\t卒園式\n,\t謝恩会\n,\t結婚式\n,\t二次会\n,\t披露宴\n,\t冠婚葬祭\n,\t母の日\n,\tハロウィン\n,\tクリスマス\n,\tバレンタイン\n,\t2020\n,\t2021\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t年代・性別\n:\t10代\n,\t20代\n,\t30代\n,\t40代\n,\t50代\n,\t60代\n,\tレディース\n,\tメンズ\n,\tペア\n,\t女性用\n,\t男性用\n,\t男女兼用\n,\tママ\n,\tマタニティ\n,\tキッズ\n,\t女の子\n,\t男の子\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t場所\n:\tオフィス\n,\tビジネス\n,\tOL\n,\t通勤\n,\t学生\n,\t通学\n,\tデート\n,\tお出かけ\n,\t公園デビュー\n,\t女子会\n,\tお泊まり\n,\t休日\n,\t運動\n,\tジム\n,\tヨガ\n,\tアウトドア\n,\tパーティー\n,\tイベント\n,\tリゾート\n,\t旅行\n,\t海\n,\tプール\n,\tリクルート\n,\t就活\n,\t高原\n,\tホテル\n,\tガーデン\n,\tレストラン\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tその他\n:\t着回し\n,\t普段使い\n,\t重ね着\n,\tお揃い\n,\t双子\n,\t韓国\n,\t韓国系\n,\tオルチャン\n,\tファッション\n,\tコーデ\n,\tスタイル\n,\t楽ちん\n,\tir\n,\t暖かい\n,\t防寒\n,\tモテ\n,\tダメージ\n,\t穴あき\n,\t体系カバー\n,\t美脚\n,\t脚長\n,\tプレゼント\n,\tギフト\n,\t新作\n,\t定番\n,\tプチプラ\n,\t激安\n,\t安い\n,\t送料無料\n,\tトレンド\n,\t流行\n,\tインスタ映え\n,\t即納\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tサイズ\n:\tサイズ\n,\tXXS\n,\tXS\n,\tS\n,\tM\n,\tL\n,\tXL\n,\t2XL\n,\t3XL\n,\t4XL\n,\t5XL\n,\t6XL\n,\t小さいサイズ\n,\t大きいサイズ\n,\tフリーサイズ\n,\t大きい\n,\t大きめ\n,\tビッグサイズ\n,\tゆったり\n,\tゆる\n,\tサイズ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tカラー\n:\t色展開\n,\t白\n,\tホワイト\n,\t黒\n,\tブラック\n,\t赤\n,\tレッド\n,\t青\n,\tブルー\n,\t緑\n,\tグリーン\n,\t紫\n,\tパープル\n,\t茶色\n,\tブラウン\n,\t灰色\n,\tグレー\n,\t黄色\n,\tオフホワイト\n,\tベージュ\n,\tカーキ\n,\tイエロー\n,\tピンク\n,\tオレンジ\n,\t水色\n,\tワインレッド\n,\tネイビー\n,\t金色\n,\t銀色\n,\tゴールド\n,\tシルバー\n,\tパステルカラー\n,\tくすみカラー\n,\t大人カラー\n,\tベイクドカラー\n,\tバイカラー\n,\tモノトーン\n,\t春カラー\n,\t秋カラー\n,\tニュアンスカラー\n,\tカラバリ\n,\tミリタリー\n,\t光沢\n,\tメタリック\n,\tアプリコット\n,\tライトブルー\n,\t,\t,\t,\t,\t,\t";
@@ -52,29 +53,21 @@ const botTable = () => {
         (
             owner           VARCHAR(50) NOT NULL,
             email           VARCHAR(50) NOT NULL,
+            password        VARCHAR(128),
             items           TEXT,
             colors          TEXT,
             header          TEXT,
             footer          TEXT,
             owner_auth_token    VARCHAR(32) NOT NULL,
-            subscription    VARCHAR(30)
-        )
-    `)
-}
-
-const inviteTable = () => {
-    pool.query(`CREATE TABLE IF NOT EXISTS invitation
-        (
-             email          VARCHAR(50) NOT NULL,
-             token          VARCHAR(32) NOT NULL,
-             owner_auth_token   VARCHAR(32) NOT NULL
+            subscription    VARCHAR(30),
+            token           VARCHAR(32) NOT NULL,
+            status          boolean
         )
     `)
 }
 
 init();
 botTable();
-inviteTable();
 
 const mailSender = (email, text) => {
     const transporter = mailer.createTransport({
@@ -106,6 +99,23 @@ const mailSender = (email, text) => {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({error: 'Unauthorized'});
+    }
+
+    jwt.verify(token, "Oriental Wind", (error, decoded) => {
+        if (err) {
+            return res.status(403).json({error: "Forbidden"});
+        }
+        req.user = decoded;
+        next();
+    })
+}
 
 app.get("/descriptions", (req, res) => {
     pool.query(`SELECT descriptions FROM users WHERE email = '${req.query.email}'`, (error, result) => {
@@ -369,29 +379,27 @@ app.post("/invite", async (req, res) => {
     const iCode = randomBytes.toString('hex');
     const email = req.body.email;
     const authToken = req.body.owner_auth_token;
-    let queryResult;
+    const owner_email = req.body.owner_email;
 
     try {
         // Check if email exists in invitation table
-        queryResult = await pool.query('SELECT * FROM invitation WHERE email = $1', [email]);
+        let queryResult = await pool.query('SELECT * FROM bots WHERE email = $1', [email]);
+        const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
+        console.log(ownerInfo.rows.at(0).email);
 
-        if (queryResult.rows.length === 0) {
-            // Check if email exists in bots table
-            queryResult = await pool.query('SELECT * FROM bots WHERE email = $1', [email]);
+        await pool.query(`DROP TABLE IF EXISTS invitation`);
+        if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
+        const owner = ownerInfo.rows.at(0);
+        if (queryResult.rowCount === 0) {
+            queryResult = await pool.query('INSERT INTO bots (owner, email, password, items, colors, header, footer, owner_auth_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+            [owner_email, email, "", owner.items, owner.colors, owner.header, owner.footer, iCode, "", authToken, true]);
 
-            if (queryResult.rows.length === 0) {
-                // Insert new invitation 
-                queryResult = await pool.query('INSERT INTO invitation (email, token, owner_auth_token) VALUES ($1, $2, $3)', [email, iCode, authToken]);
+            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invited/id=' + iCode;
 
-                const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invite/' + iCode;
-
-                if (mailSender(email, inviteLink)) {
-                    return res.json({ invited: 1 });
-                } else {
-                    return res.json({ invited: 3 });
-                }
+            if (mailSender(email, inviteLink)) {
+                return res.json({ invited: 1 });
             } else {
-                return res.json({ invited: 2 });
+                return res.json({ invited: 3 });
             }
         } else {
             return res.json({ invited: 2 });
@@ -402,18 +410,52 @@ app.post("/invite", async (req, res) => {
     }
 });
 
+app.get("/invited/:id", async (req, res) => {
+    const id = req.params.id;
+    try {
+        const queryResult = await pool.query(`SELECT * FROM bots WHERE token = ${id}`);
+        if (queryResult.rowCount === 0) return res.status(404).json({ info: "Invalid"});
+        if (queryResult.rows.at(0).status === false) return res.json({info: "already registered"});
+        return res.json({info: "okay", email: queryResult.rows.at(0).email});
+    }
+    catch (e) {
+        return res.status(500).json({
+            error: error.mess
+        })
+    }
+});
+
 app.get("/getBots", async (req, res) => {
-    pool.query(`SELECT * FROM invitation WHERE owner = '${req.body.owner}'`, async (error, result) => {
+    pool.query(`SELECT * FROM bots WHERE owner = '${req.body.owner}'`, async (error, result) => {
         if (error) return res.status(404).json({ error });
         return res.json({ result: "success", bots: result });
     });
 });
 
-app.get("/signup/bot", async (req, res) => {
-    pool.query(`SELECT * FROM invitation WHERE email = '${req.body.email}'`, async (error, result) => {
+app.post("/bots/signup", async (req, res) => {
+    pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error) return res.status(404).json({ error });
-        // if (result.rows.at(0).)
+        if (result.rowCount > 0){
+            const token = jwt.sign({email: req.body.email}, "Oriental Wind");
+            return res.json({status: "okay", token: token});
+        }
     });
+});
+
+app.post("/bots/signin", async (req, res) => {
+    const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`);
+    if (queryResult.rowCount > 0) {
+        if (queryResult.rows.at(0).password === req.body.password){
+            const token = jwt.sign({email: req.body.email}, "Oriental Wind");
+            return res.json({status: "okay", token: token});
+        }
+        else return res.json({status: "no"});
+    }
+    else return res.json({status: "not found"});
+});
+
+app.get('/authorize', authenticateToken, (req, res) => {
+    res.json({status: 'authorized'});
 });
 
 app.listen(process.env.PORT || 5000, () => {
