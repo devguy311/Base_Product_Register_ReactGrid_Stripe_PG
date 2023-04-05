@@ -394,7 +394,7 @@ app.post("/invite", async (req, res) => {
             queryResult = await pool.query('INSERT INTO bots (owner, email, password, items, colors, header, footer, owner_auth_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
             [owner_email, email, "", owner.items, owner.colors, owner.header, owner.footer, iCode, "", authToken, true]);
 
-            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invited/id=' + iCode;
+            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invite_id/' + iCode;
 
             if (mailSender(email, inviteLink)) {
                 return res.json({ invited: 1 });
@@ -412,13 +412,15 @@ app.post("/invite", async (req, res) => {
 
 app.get("/invited/:id", async (req, res) => {
     const id = req.params.id;
+    console.log(id);
     try {
-        const queryResult = await pool.query(`SELECT * FROM bots WHERE token = ${id}`);
-        if (queryResult.rowCount === 0) return res.status(404).json({ info: "Invalid"});
+        const queryResult = await pool.query(`SELECT * FROM bots WHERE token = '${id}'`);
+        if (queryResult.rowCount === 0) return res.json({ info: "Invalid"});
         if (queryResult.rows.at(0).status === false) return res.json({info: "already registered"});
         return res.json({info: "okay", email: queryResult.rows.at(0).email});
     }
-    catch (e) {
+    catch (error) {
+        console.log(error.mess);
         return res.status(500).json({
             error: error.mess
         })

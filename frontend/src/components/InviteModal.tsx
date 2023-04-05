@@ -86,8 +86,9 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
 
   const sendInvite = () => {
     const auth_code = localStorage.getItem("authorization_code");
+    const owner_email = localStorage.getItem("email");
     mailList.forEach((email) => {
-      const data = { email: email, owner_auth_token: auth_code };
+      const data = { email: email, owner_auth_token: auth_code, owner_email: owner_email};
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
         setInvited(result.data.invited);
       });

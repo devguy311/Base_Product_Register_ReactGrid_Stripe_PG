@@ -49,7 +49,7 @@ const InvitePanel = () => {
                 }}
                 subheader={<li />}
             >
-                {botData.map((idx) => (
+                {/* {botData.map((idx) => (
                     <li key={`${idx}`}>
                         <ul>
                             <ListItem key={idx}>
@@ -57,7 +57,7 @@ const InvitePanel = () => {
                             </ListItem>
                         </ul>
                     </li>
-                ))}
+                ))} */}
             </List>
         </Box>
     );

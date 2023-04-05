@@ -96,6 +96,7 @@ const HomePage = () => {
                     .then((response) => {
                         setUser(response.data.user);
                         email = response.data.user.mail_address;
+                        localStorage.setItem("email", email);
                         if (email === undefined) alert("メールアドレスないですね！");
                     })
                     .catch(() => {
@@ -127,9 +128,10 @@ const HomePage = () => {
                     認可する
                 </Button>
             )}
-                <Button variant="outlined">
-                    Bot Login
-                </Button>
+            {loadingStatus === LoadingStatus.LOADED && token[0] === undefined ? (
+                <Button variant="outlined" href="/signin">
+                    商品登録者としてログイン
+                </Button>) : ""}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus === PaymentStatus.UNPAID && (
                 <Stack direction="row" spacing={2}>
                     <Card sx={{ maxWidth: 345 }}>
@@ -196,7 +198,7 @@ const HomePage = () => {
                             <Tab label="テンプレート 3" {...a11yProps(8)} />
                             <Tab label="テンプレート 4" {...a11yProps(9)} />
                             <Tab label="テンプレート 5" {...a11yProps(10)} />
-                            <Tab label="Bot" {...a11yProps(11)} />
+                            <Tab label="商品登録者" {...a11yProps(11)} />
 
                             <TopRightButtons />
                         </Tabs>
