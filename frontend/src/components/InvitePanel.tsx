@@ -48,7 +48,7 @@ const InvitePanel = () => {
 
     useEffect(() => {
         setBotList();
-    }, [botData]);
+    }, []);
 
     const deleteBot = async (email: string) => {
         const owner = localStorage.getItem("email");
@@ -85,7 +85,7 @@ const InvitePanel = () => {
             <PositionedSnackbar type={alertType} open={showSnackBar} message={snackMessage} />
             <Demo>
                 <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                    {botData && botData.map((botData: jsonType, idx) => (
+                    { botData.length > 0 && botData.map((botData: jsonType, idx) => (
                         <ListItem
                             sx={{ borderColor: '#123456' }}
                             secondaryAction={
