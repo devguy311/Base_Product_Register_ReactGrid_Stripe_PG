@@ -11,8 +11,9 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { Box, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import axios from "axios"
-import AlertBar from './Alert';
+import axios from "axios";
+import PositionedSnackbar from "./Alert";
+import { AlertColor } from '@mui/material';
 
 const filter = createFilterOptions<string>();
 
@@ -85,14 +86,16 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
   }
 
   const sendInvite = () => {
-    const auth_code = localStorage.getItem("authorization_code");
+    const auth_code = localStorage.getItem("refresh_token");
+    console.log(auth_code);
     const owner_email = localStorage.getItem("email");
     mailList.forEach((email) => {
-      const data = { email: email, owner_auth_token: auth_code, owner_email: owner_email};
+      const data = { email: email, owner_refresh_token: auth_code, owner_email: owner_email };
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
         setInvited(result.data.invited);
       });
     });
+    handleCloseModal();
   }
 
   const handleCloseModal = () => {
@@ -102,53 +105,54 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
   }
 
   return (
-    <BootstrapDialog
-      onClose={handleCloseModal}
-      aria-labelledby="customized-dialog-title"
-      open={isOpen}
-      fullWidth
-    >
-      <BootstrapDialogTitle id="customized-dialog-title" onClose={handleCloseModal}>
-        Modal title
-      </BootstrapDialogTitle>
-      <DialogContent dividers>
-        <Typography>Invite Bots for your use.</Typography>
-        <Autocomplete
-          multiple
-          id="tags-outlined"
-          options={list}
-          value={mailList}
-          onChange={handleChange}
-          getOptionLabel={(option) => option || ""}
-          filterSelectedOptions
-          filterOptions={(options, params) => {
-            const filtered = filter(options, params);
+    <>
+      <BootstrapDialog
+        onClose={handleCloseModal}
+        aria-labelledby="customized-dialog-title"
+        open={isOpen}
+        fullWidth
+      >
+        <BootstrapDialogTitle id="customized-dialog-title" onClose={handleCloseModal}>
+          招待ダイアログ
+        </BootstrapDialogTitle>
+        <DialogContent dividers>
+          <Typography>アイテム登録のためにユーザーを招待する</Typography>
+          <Autocomplete
+            multiple
+            id="tags-outlined"
+            options={list}
+            value={mailList}
+            onChange={handleChange}
+            getOptionLabel={(option) => option || ""}
+            filterSelectedOptions
+            filterOptions={(options, params) => {
+              const filtered = filter(options, params);
 
-            const { inputValue } = params;
-            // Suggest the creation of a new value
-            const isExisting = options.some((option) => inputValue === option);
-            if (inputValue !== "" && !isExisting) {
-              filtered.push(inputValue);
-            }
-            return filtered;
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              error={!isValid}
-              helperText={isValid === true ? "" : "incorrect email"}
-              placeholder="name@gmail.com"
-            />
-          )}
-        />
-        {invited === 1 ? <AlertBar alertType='success' message='Successfully Invited!' /> : (invited === 2 ? <AlertBar alertType='warning' message='Already Invited!' /> : ( invited === 3 ? <AlertBar alertType='error' message='An Error Occured!' /> : ""))}
-      </DialogContent>
-      <DialogActions>
-        <Button autoFocus onClick={sendInvite} variant="contained" endIcon={<SendIcon />}>
-          Send Invite
-        </Button>
-      </DialogActions>
-    </BootstrapDialog>
+              const { inputValue } = params;
+              // Suggest the creation of a new value
+              const isExisting = options.some((option) => inputValue === option);
+              if (inputValue !== "" && !isExisting) {
+                filtered.push(inputValue);
+              }
+              return filtered;
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                error={!isValid}
+                helperText={isValid === true ? "" : "incorrect email"}
+                placeholder="name@gmail.com"
+              />
+            )}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={sendInvite} variant="contained" endIcon={<SendIcon />}>
+            招待を送る
+          </Button>
+        </DialogActions>
+      </BootstrapDialog>
+    </>
   );
 }
 

@@ -10,7 +10,11 @@ const ProductPanel = (props: any) => {
     const [loadingStatus, setLoadingStatus] = useState(LoadingStatus.LOADING);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, { params: { email: props.email, no: props.no } }).then((response) => {
+        const bot_auth_token = localStorage.getItem("bot_auth_token");
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, {
+            headers: {'Authorization': `Bearer ${bot_auth_token}`},
+            params: { email: props.email, no: props.no }
+        }).then((response) => {
             setData(response.data.descriptions);
             setLoadingStatus(LoadingStatus.LOADED);
         });

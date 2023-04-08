@@ -280,11 +280,16 @@ const ProductTable = (props: any) => {
 
     const handleSave = () => {
         setIsSaving(true);
+        const bot_auth_token = localStorage.getItem("bot_auth_token");
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/descriptions`, {
                 email: props.email,
                 no: props.no,
                 data: getFromData(),
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${bot_auth_token}`
+                }
             })
             .then((response) => {
                 if (response.data.saved) console.log("保存した");

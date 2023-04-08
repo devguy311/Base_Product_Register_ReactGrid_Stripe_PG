@@ -47,7 +47,7 @@ const SignUp = () => {
     const signup = async () => {
         const result = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/bots/signup`, {email: email, password: password});
         if (result.data.status === "okay"){
-            localStorage.setItem("auth_token", result.data.token);
+            localStorage.setItem("bot_auth_token", result.data.token);
             navigate("/");
         }
     }

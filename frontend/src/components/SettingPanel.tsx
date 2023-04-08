@@ -20,6 +20,7 @@ const SettingPanel = (props: any) => {
 
     const handleSubmit = () => {
         setIsSaving(true);
+        const bot_auth_token = localStorage.getItem("bot_auth_token");
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/product/info`, {
                 email: props.user.mail_address,
@@ -27,12 +28,20 @@ const SettingPanel = (props: any) => {
                 colorList,
                 header,
                 footer,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${bot_auth_token}`
+                }
             })
             .finally(() => setIsSaving(false));
     };
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}/product`, { params: { email: props.user.mail_address } }).then((response) => {
+        const bot_auth_token = localStorage.getItem("bot_auth_token");
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/product`, {
+            headers: { 'Authorization': `Bearer ${bot_auth_token}` },
+            params: { email: props.user.mail_address }
+        }).then((response) => {
             const productInfo = response.data.productInfo;
             if (response.data.productInfo !== undefined) {
                 setHeader(productInfo.header);
@@ -73,7 +82,7 @@ const SettingPanel = (props: any) => {
                     <Grid container spacing={2} sx={{ mt: 2, pl: 1, pr: 1 }}>
                         <Grid item xs={6}>
                             <Grid item xs={12} sx={{ mb: 2 }}>
-                                <Box
+                                {props.user.background === undefined ? "" : <Box
                                     style={{
                                         textAlign: "center",
                                         backgroundImage: `url(${props.user.background})`,
@@ -81,8 +90,8 @@ const SettingPanel = (props: any) => {
                                     }}
                                     height={50}
                                 >
-                                    <img height={60} src={`${props.user.logo}`} alt="ロゴ" />
-                                </Box>
+                                    {props.user.logo === undefined ? "" : <img height={60} src={`${props.user.logo}`} alt="ロゴ" />}
+                                </Box>}
                             </Grid>
                             <Grid item xs={12} sx={{ mb: 2 }}>
                                 項目

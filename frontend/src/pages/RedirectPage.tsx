@@ -15,7 +15,10 @@ const RedirectPage = (props: any) => {
         if (invite_id !== undefined && invite_id !== null && invite_id !== "") {
             axios.get(`${process.env.REACT_APP_BACKEND_URL}/invited/${invite_id}`).then((response) => {
                 if (response.data.info === "Invalid") console.log("Invalid Request!");
-                else if (response.data.info === "already registered") console.log("Already registered!");
+                else if (response.data.info === "already registered") {
+                    console.log("Already registered!");
+                    navigate("/signin");
+                }
                 else if (response.data.info === "okay") {
                     localStorage.setItem("invite_id", invite_id);
                     localStorage.setItem("bot_email", response.data.email);

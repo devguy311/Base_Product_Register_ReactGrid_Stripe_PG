@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import axios from "axios";
-import { Backdrop, Button, Card, CardActionArea, CardActions, CardContent, CircularProgress, Link, Stack, Typography } from "@mui/material";
+import { Backdrop, Button, Card, CardActionArea, CardActions, CardContent, CircularProgress, Grid, Stack, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 import SettingPanel from "../components/SettingPanel";
@@ -14,7 +14,8 @@ import useToken from "../hooks/useToken";
 import useAuthorizationCode from "../hooks/useAuthorizationCode";
 import getStripe from "../lib/getStripe";
 import InvitePanel from "../components/InvitePanel";
-
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 const a11yProps = (index: number) => {
     return {
         id: `product-tab-${index}`,
@@ -31,10 +32,15 @@ const HomePage = () => {
     const [user, setUser] = useState<User>();
     const { token, setToken } = useToken();
     const { authorizationCode, setAuthorizationCode } = useAuthorizationCode();
+    const [authorizedBot, setAuthorizedBot] = useState(false);
+    const [botAuthToken, setBotAuthToken] = useState(localStorage.getItem("bot_auth_token"));
+    const [loadingButton, SetLoadingButton] = useState(true);
 
     const checkPayment = (email: string, done: () => void) => {
         axios
-            .post(`${process.env.REACT_APP_BACKEND_URL}/stripe/check`, { email })
+            .post(`${process.env.REACT_APP_BACKEND_URL}/stripe/check`, { email }, {
+                headers: { 'Authorization': `Bearer ${botAuthToken}` }
+            })
             .then((response) => {
                 if (response.data.result === "success")
                     setPaymentStatus(response.data.interval === "month" ? PaymentStatus.PAID_MONTHLY : PaymentStatus.PAID_YEARLY);
@@ -60,7 +66,7 @@ const HomePage = () => {
                 ],
                 locale: "ja",
                 mode: "subscription",
-                successUrl: `${process.env.REACT_APP_BACKEND_URL}/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
+                successUrl: `${process.env.REACT_APP_BACKEND_URL}/stripe/success?session_id={CHECKOUT_SESSION_ID}&bot_auth_token=Bearer ${botAuthToken}`,
                 cancelUrl: `${window.location.origin}`,
                 customerEmail: user?.mail_address,
             });
@@ -74,14 +80,17 @@ const HomePage = () => {
     useEffect(() => {
         let accessToken = token[0];
         let email: string;
-
+        setBotAuthToken(localStorage.getItem("bot_auth_token"));
         axios
             .post(`${process.env.REACT_APP_BACKEND_URL}/credentials`, {
                 accessToken,
                 refreshToken: token[1],
                 authorizationCode,
+            }, {
+                headers: { 'Authorization': `Bearer ${botAuthToken}` }
             })
             .then((response) => {
+                console.log(response);
                 if (response.status === 201) {
                     setToken([response.data.accessToken, response.data.refreshToken]);
                     accessToken = response.data.accessToken;
@@ -89,6 +98,9 @@ const HomePage = () => {
 
                 axios
                     .get(`${process.env.REACT_APP_BACKEND_URL}/me`, {
+                        headers: {
+                            Authorization: `Bearer ${botAuthToken}`
+                        },
                         params: {
                             accessToken,
                         },
@@ -121,67 +133,80 @@ const HomePage = () => {
                     <CircularProgress color="inherit" />
                 </Backdrop>
             )}
-            {loadingStatus === LoadingStatus.LOADED && token[0] === undefined && (
-                <Button variant="outlined"
-                    href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`}
-                >
-                    認可する
-                </Button>
-            )}
-            {loadingStatus === LoadingStatus.LOADED && token[0] === undefined ? (
-                <Button variant="outlined" href="/signin">
-                    商品登録者としてログイン
-                </Button>) : ""}
-            {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus === PaymentStatus.UNPAID && (
-                <Stack direction="row" spacing={2}>
-                    <Card sx={{ maxWidth: 345 }}>
-                        <CardActionArea>
-                            <CardContent>
-                                <Typography gutterBottom variant="h5" component="div">
-                                    製品購入
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    ５３，７８４円。　／　年
-                                </Typography>
-                            </CardContent>
-                        </CardActionArea>
-                        <CardActions>
-                            <LoadingButton
-                                size="small"
-                                loading={isYearlyButtonLoading}
-                                color="primary"
-                                onClick={() => handlePaymentCheckout("yearly")}
-                                disabled={!isYearlyButtonLoading && isMonthlyButtonLoading}
-                            >
-                                払う
-                            </LoadingButton>
-                        </CardActions>
-                    </Card>
+            {(loadingStatus === LoadingStatus.LOADED && token[0] === undefined) ? (
+                <Grid container alignItems="center" style={{ height: '100vh' }} spacing={2} justifyContent={"center"}>
+                    <Grid item>
+                        <Button style={{ width: '180px' }} size="large" variant="contained"
+                            href={`https://api.thebase.in/1/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`}
+                            startIcon={<AdminPanelSettingsIcon />}
+                        >
+                            マネージャー
+                        </Button>
+                    </Grid>
+                    <Grid item>
+                        <Button style={{ width: '180px' }} size="large" href="/signin" variant="contained" startIcon={<SupervisorAccountIcon />}>
+                            登録者
+                        </Button>
+                    </Grid>
+                </Grid>
+            ) : ""}
 
-                    <Card sx={{ maxWidth: 345 }}>
-                        <CardActionArea>
-                            <CardContent>
-                                <Typography gutterBottom variant="h5" component="div">
-                                    製品購入
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    ４，９８０円。　／　月
-                                </Typography>
-                            </CardContent>
-                        </CardActionArea>
-                        <CardActions>
-                            <LoadingButton
-                                size="small"
-                                loading={isMonthlyButtonLoading}
-                                color="primary"
-                                onClick={() => handlePaymentCheckout("monthly")}
-                                disabled={!isMonthlyButtonLoading && isYearlyButtonLoading}
-                            >
-                                払う
-                            </LoadingButton>
-                        </CardActions>
-                    </Card>
-                </Stack>
+            {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus === PaymentStatus.UNPAID && (
+
+                <Grid container alignItems="center" style={{ height: '100vh' }} spacing={2} justifyContent={"center"}>
+                    <Grid item>
+                        <Card sx={{ maxWidth: 345 }} >
+                            <CardActionArea>
+                                <CardContent>
+                                    <Typography gutterBottom variant="h5" component="div">
+                                        製品購入
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ５３，７８４円。　／　年
+                                    </Typography>
+                                </CardContent>
+                            </CardActionArea>
+                            <CardActions>
+                                <LoadingButton
+                                    size="small"
+                                    loading={isYearlyButtonLoading}
+                                    color="primary"
+                                    variant="contained"
+                                    onClick={() => handlePaymentCheckout("yearly")}
+                                    disabled={!isYearlyButtonLoading && isMonthlyButtonLoading}
+                                >
+                                    払う
+                                </LoadingButton>
+                            </CardActions>
+                        </Card>
+                    </Grid>
+                    <Grid item>
+                        <Card sx={{ maxWidth: 345 }}>
+                            <CardActionArea>
+                                <CardContent>
+                                    <Typography gutterBottom variant="h5" component="div">
+                                        製品購入
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ４，９８０円。　／　月
+                                    </Typography>
+                                </CardContent>
+                            </CardActionArea>
+                            <CardActions>
+                                <LoadingButton
+                                    size="small"
+                                    loading={isMonthlyButtonLoading}
+                                    color="primary"
+                                    variant="contained"
+                                    onClick={() => handlePaymentCheckout("monthly")}
+                                    disabled={!isMonthlyButtonLoading && isYearlyButtonLoading}
+                                >
+                                    払う
+                                </LoadingButton>
+                            </CardActions>
+                        </Card>
+                    </Grid>
+                </Grid>
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
@@ -198,8 +223,7 @@ const HomePage = () => {
                             <Tab label="テンプレート 3" {...a11yProps(8)} />
                             <Tab label="テンプレート 4" {...a11yProps(9)} />
                             <Tab label="テンプレート 5" {...a11yProps(10)} />
-                            <Tab label="商品登録者" {...a11yProps(11)} />
-
+                            {!botAuthToken ? <Tab label="商品登録者" {...a11yProps(11)} /> : ""}
                             <TopRightButtons />
                         </Tabs>
                     </Box>

@@ -59,6 +59,7 @@ const ProductDescriptionPanel = (props: any) => {
     const [itemStock, setItemStock] = useState(0);
     const [identifier, setIdentifier] = useState("");
     const [savingStatus, setSavingStatus] = useState(SavingStatus.NOT_SAVING);
+    const [botAuthToken, setBothAuthToken] = useState(localStorage.getItem("bot_auth_token"));
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => {
@@ -204,7 +205,8 @@ const ProductDescriptionPanel = (props: any) => {
             email: props.email,
             header,
             footer,
-        });
+        },
+            { headers: { 'Authorization': `Bearer ${botAuthToken}` } });
 
         let accessToken = token[0];
         axios
@@ -212,7 +214,8 @@ const ProductDescriptionPanel = (props: any) => {
                 accessToken,
                 refreshToken: token[1],
                 authorizationCode,
-            })
+            },
+                { headers: { 'Authorization': `Bearer ${botAuthToken}` } })
             .then((response) => {
                 if (response.status === 201) {
                     setToken([response.data.accessToken, response.data.refreshToken]);
@@ -226,7 +229,8 @@ const ProductDescriptionPanel = (props: any) => {
                         price,
                         identifier,
                         ...(productVariations.length === 0 ? { stock: itemStock } : { variations: productVariations }),
-                    })
+                    },
+                        { headers: { 'Authorization': `Bearer ${botAuthToken}` } })
                     .then(() => setSavingStatus(SavingStatus.SAVED))
                     .catch(() => setSavingStatus(SavingStatus.NOT_SAVED));
             })
@@ -238,8 +242,12 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     useEffect(() => {
+        setBothAuthToken(localStorage.getItem("bot_auth_token"));
         axios
             .get(`${process.env.REACT_APP_BACKEND_URL}/product`, {
+                headers: {
+                    'Authorization': `Bearer ${botAuthToken}`
+                },
                 params: {
                     email: props.email,
                 },
@@ -341,7 +349,7 @@ const ProductDescriptionPanel = (props: any) => {
                 </Step>
                 <Step key={1}>
                     <StepLabel>
-                        ステップ　2　
+                        ステップ　2
                         {activeStep === 1 && (
                             <Button size="small" variant="outlined" onClick={handleBack}>
                                 戻る
@@ -436,7 +444,7 @@ const ProductDescriptionPanel = (props: any) => {
                 </Step>
                 <Step key={2}>
                     <StepLabel optional={<Typography variant="caption">最後</Typography>}>
-                        ステップ　3　
+                        ステップ　3
                         {activeStep === 2 && (
                             <Button size="small" variant="outlined" onClick={handleBack}>
                                 戻る
