@@ -85,7 +85,7 @@ const InvitePanel = () => {
             <PositionedSnackbar type={alertType} open={showSnackBar} message={snackMessage} />
             <Demo>
                 <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                    {botData.map((botData: jsonType, idx) => (
+                    {botData && botData.map((botData: jsonType, idx) => (
                         <ListItem
                             sx={{ borderColor: '#123456' }}
                             secondaryAction={
