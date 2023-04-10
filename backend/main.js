@@ -394,7 +394,7 @@ app.post("/invite", async (req, res) => {
             queryResult = await pool.query('INSERT INTO bots (owner, email, password, items, colors, header, footer, owner_auth_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
             [owner_email, email, "", owner.items, owner.colors, owner.header, owner.footer, iCode, "", authToken, true]);
 
-            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invite_id/' + iCode;
+            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invited/' + iCode;
 
             if (mailSender(email, inviteLink)) {
                 return res.json({ invited: 1 });
