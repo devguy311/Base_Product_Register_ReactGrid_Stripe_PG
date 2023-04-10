@@ -437,7 +437,6 @@ app.post("/invite", async (req, res) => {
         const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
 
         if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
-        console.log("Owner Info: ", ownerInfo.rows[0]);
         const owner = ownerInfo.rows[0];
         if (queryResult.rowCount === 0) {
             queryResult = await pool.query('INSERT INTO bots (owner, email, password, descriptions, items, colors, header, footer, owner_refresh_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
@@ -480,7 +479,7 @@ app.get("/getBots", async (req, res) => {
         if (error) return res.status(404).json({ error });
         let resultData = [];
         for (let i = 0; i < result.rowCount; i++) {
-            resultData.push({ email: result.rows.at(i).email });
+            resultData.push({ email: result.rows[i].email });
         }
         return res.json({ result: "success", bots: resultData });
     });
