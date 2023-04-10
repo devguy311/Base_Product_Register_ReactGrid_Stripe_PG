@@ -123,6 +123,7 @@ app.get("/descriptions", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT descriptions FROM ${table} WHERE email = '${req.query.email}'`, (error, result) => {
         let descriptions = [];
         if (
@@ -145,6 +146,7 @@ app.post("/descriptions", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(
         `UPDATE ${table} SET descriptions[${req.body.no}] = '${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${req.body.email
         }'`,
@@ -158,6 +160,7 @@ app.post("/descriptions", async (req, res) => {
 app.get("/me", async (req, res) => {
     const authHeader = req.headers['authorization'];
     const bot_data = await isBot(authHeader);
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     axios
         .get("https://api.thebase.in/1/users/me", {
             headers: {
@@ -193,6 +196,7 @@ app.post("/credentials", async (req, res) => {
     const authorizationCode = req.body.authorizationCode;
     const bot_data = await isBot(authHeader);
     if (bot_data) refreshToken = bot_data.owner_refresh_token;
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     axios
         .get("https://api.thebase.in/1/users/me", {
             headers: {
@@ -260,6 +264,7 @@ app.get("/product", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT items, colors, header, footer FROM ${table} WHERE email = '${req.query.email}'`, (error, result) => {
         if (error && result.rows.length === 0) return res.status(404).json({ error });
         res.json({ productInfo: result.rows[0] });
@@ -271,6 +276,7 @@ app.post("/product/info", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT * FROM ${table} WHERE email = '${req.body.email}'`, (error, result) => {
         if (error || result.rows.length === 0) return res.status(404).json({ error });
         pool.query(
@@ -291,6 +297,7 @@ app.post("/product/header-footer", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT * FROM ${table} WHERE email = '${req.body.email}'`, (error, result) => {
         if (error || result.rows.length === 0) return res.status(404).json({ error });
         pool.query(`UPDATE ${table} SET header = '${req.body.header}', footer = '${req.body.footer}' WHERE email = '${req.body.email}'`, (error) => {
@@ -382,6 +389,7 @@ app.get("/stripe/success", async (req, res) => {
     const bot_data = await isBot(bot_auth_token);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT * FROM ${table} WHERE email = '${session.customer_email}'`, (error, result) => {
         if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
         if (result.rows.length === 0) {
@@ -416,6 +424,7 @@ app.post("/stripe/check", async (req, res) => {
     const bot_data = await isBot(authHeader);
     let table = "users";
     if (bot_data) table = "bots";
+    if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT subscription FROM ${table} WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error || result.rows.length === 0 || result.rows[0].subscription === null || result.rows[0].subscription === "") return res.status(404).json({ error });
         const subscription = await stripe.subscriptions.retrieve(result.rows[0].subscription);
@@ -531,15 +540,6 @@ app.post("/bots/signin", async (req, res) => {
         else return res.json({ status: "no" });
     }
     else return res.json({ status: "not found" });
-});
-
-app.get('/checkAuthentication', (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const decoded = jwt.decode(token, "Oriental Wind");
-    if (decoded) {
-        res.json({ status: 'authorized' });
-    } else res.json({ status: 'unauthorized' });
 });
 
 app.listen(process.env.PORT || 5000, () => {
