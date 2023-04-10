@@ -74,7 +74,7 @@ const InvitePanel = () => {
                 setShowSnackBar(false);
             }, 5000);
         }
-        await setBotList();
+        setBotList();
     }
 
     type jsonType = {

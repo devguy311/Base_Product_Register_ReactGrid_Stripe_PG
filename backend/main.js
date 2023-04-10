@@ -437,6 +437,8 @@ app.post("/invite", async (req, res) => {
         const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
 
         if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
+        console.log("owner Info: ", ownerInfo);
+        console.log(ownerInfo.rows.at(0));
         const owner = ownerInfo.rows.at(0);
         if (queryResult.rowCount === 0) {
             queryResult = await pool.query('INSERT INTO bots (owner, email, password, descriptions, items, colors, header, footer, owner_refresh_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
@@ -453,7 +455,7 @@ app.post("/invite", async (req, res) => {
             return res.json({ invited: 2 });
         }
     } catch (error) {
-        console.error(error);
+        console.log("onwer info: ", error);
         return res.status(500).json({ error: error.message });
     }
 });
@@ -467,7 +469,7 @@ app.get("/invited/:id", async (req, res) => {
         return res.json({ info: "okay", email: queryResult.rows.at(0).email });
     }
     catch (error) {
-        console.log(error.mess);
+        console.log(error);
         return res.status(500).json({
             error: error.mess
         })
