@@ -19,7 +19,7 @@ function Copyright(props: any) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
             {'Copyright © '}
-            <Link color="inherit" href="https://mui.com/">
+            <Link color="inherit" href="#">
                 Oriental Wind
             </Link>{' '}
             {new Date().getFullYear()}
@@ -134,13 +134,6 @@ const SignIn = () => {
                         >
                             ログイン
                         </Button>
-                        <Grid container justifyContent="flex-end">
-                            <Grid item>
-                                <Link href="signup" variant="body2">
-                                    まだ登録していませんか？ サインアップ
-                                </Link>
-                            </Grid>
-                        </Grid>
                     </Box>
                 </Box>
                 <Copyright sx={{ mt: 5 }} />

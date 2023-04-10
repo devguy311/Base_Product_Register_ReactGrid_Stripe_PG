@@ -54,7 +54,8 @@ const InvitePanel = () => {
         const owner = localStorage.getItem("email");
         const result = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/deleteBots`, {
             params: {
-                email: owner
+                owner: owner,
+                email: email
             }
         });
         if (result.data.status === 'okay') {
@@ -73,7 +74,7 @@ const InvitePanel = () => {
                 setShowSnackBar(false);
             }, 5000);
         }
-        setBotList();
+        await setBotList();
     }
 
     type jsonType = {
@@ -109,28 +110,6 @@ const InvitePanel = () => {
             </Demo>
             <Button variant="contained" onClick={handleOpenModal}>招待</Button>
             <InviteModal isOpen={isOpen} handleClose={handleCloseModal} />
-            <List
-                sx={{
-                    width: '100%',
-                    maxWidth: 360,
-                    bgcolor: 'background.paper',
-                    position: 'relative',
-                    overflow: 'auto',
-                    maxHeight: 300,
-                    '& ul': { padding: 0 },
-                }}
-                subheader={<li />}
-            >
-                {/* {botData.map((idx) => (
-                    <li key={`${idx}`}>
-                        <ul>
-                            <ListItem key={idx}>
-                                <ListItemText primary={`Item ${idx}`} />
-                            </ListItem>
-                        </ul>
-                    </li>
-                ))} */}
-            </List>
         </Box>
     );
 }
