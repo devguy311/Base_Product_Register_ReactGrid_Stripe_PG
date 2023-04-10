@@ -9,6 +9,8 @@ const stripe = require("stripe")(
 const crypto = require('crypto');
 const mailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const verifyKey = "";
 
 const DEFAULT_TEMPLATE_1 =
     "自由記入:\tスカート\n,\tフレンチスクエア\n,\tニットセーター\n,\tラビットファーセーター\n,\tバフスリーブ\n,\tストライプ　シャツ\n,\tレトロ\n,\tデニム スカート\n,\tリブニット\n,\tリブニット\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t大\n:\tトップス\n,\tスカート\n,\tボトムス\n,\tパンツ\n,\tアウター\n,\tワンピース\n,\tセットアップ\n,\tルームウェア\n,\tパジャマ\n,\t迷彩\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t中\n:\tTシャツ\n,\tシャツ\n,\tブラウス\n,\tカットソー\n,\tニットソー\n,\tセーター\n,\tカーディガン\n,\tプルオーバー\n,\tパーカー\n,\tトレーナー\n,\tベスト\n,\tフーディー\n,\tオールインワン\n,\tサロペット\n,\tチュニック\n,\tコート\n,\tブルゾン\n,\tジャケット\n,\tシャンパー\n,\tGジャン\n,\tGパン\n,\tズボン\n,\t上着\n,\tスーツ\n,\tスウェット\n,\tジャージ\n,\t部屋着\n,\t寝巻き\n,\tナイトウェア\n,\t着ぐるみ\n,\tコスプレ\n,\tレギンス\n,\tレギパン\n,\tキャミソール\n,\tガウン\n,\t着る毛布\n,\tネグリジェ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t小\n:\t白シャツ\n,\t白トップス\n,\tビッグT\n,\tジョガーパンツ\n,\tワイドパンツ\n,\tストレートパンツ\n,\tガウチョパンツ\n,\tジョガーパンツ\n,\tクロップドパンツ\n,\tデニムパンツ\n,\tスキニーパンツ\n,\tベイカーパンツ\n,\tサルエルパンツ\n,\tカラーパンツ\n,\tテーパードパンツ\n,\tバギーパンツ\n,\tショートパンツ\n,\tミニスカート\n,\tロングスカート\n,\tプリーツスカート\n,\tフレアスカート\n,\tチュールスカート\n,\tペンシルスカート\n,\tコクーンスカート\n,\tタイトスカート\n,\tニットスカート\n,\tデニムスカート\n,\tタックスカート\n,\tジャンパースカート\n,\tジャンスカ\n,\tもこもこアウター\n,\tボアブルゾン\n,\tロングコート\n,\tチェスターコート\n,\tトレンチコート\n,\tダウンコート\n,\tシャツワンピース\n,\tフレアワンピース\n,\tティアードワンピース\n,\tロジスワンピース\n,\tデニムワンピース\n,\tワンピドレス\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t丈\n:\tミニ\n,\tミニ丈\n,\tショート\n,\tショート丈\n,\t膝丈\n,\tひざ丈\n,\t膝上\n,\t膝下\n,\tミモレ\n,\tミモレ丈\n,\tロング\n,\tロング丈\n,\tマキシ\n,\tマキシ丈\n,\t9分丈\n,\tアンクル丈\n,\t7分丈\n,\tミディアム丈\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t袖\n:\t袖なし\n,\t袖あり\n,\tノースリーブ\n,\t半袖\n,\t5分袖\n,\t五分袖\n,\t7分袖\n,\t七分袖\n,\t長袖\n,\tボリューム袖\n,\tドルマンスリーブ\n,\tパフスリーブ\n,\tフレアスリーブ\n,\tフレンチスリーブ\n,\tホルンスリーブ\n,\tドロップショルダー\n,\t萌袖\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t首回り\n:\tVネック\n,\tUネック\n,\tラウンドネック\n,\tスクエアネック\n,\tカシュクール\n,\tハイネック\n,\tタートルネック\n,\tクルーネック\n,\tヘンリーネック\n,\tボートネック\n,\tオフショルダー\n,\tオフショル\n,\tワンショルダー\n,\tワンショル\n,\t襟付き\n,\t襟なし\n,\tスタンドカラー\n,\tホルターネック\n,\tハイネック\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t形\n:\tフレア\n,\tセミフレア\n,\tスリム\n,\tタイト\n,\t細身\n,\tストレート\n,\tワイド\n,\tガウチョ\n,\tペプラム\n,\tAライン\n,\tIライン\n,\tマーメイド\n,\tアシンメトリー\n,\t切り替えデザイン\n,\tドッキング\n,\tスマート\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tデザイン\n:\tプリーツ\n,\tレース\n,\t刺繍\n,\tチュール\n,\tシフォン\n,\tフリル\n,\tリボン\n,\tベルト\n,\tウエストマーク\n,\tウエストリボン\n,\tバックリボン\n,\tスリット\n,\tサイドスリット\n,\tバックスリット\n,\t切り替えデザイン\n,\tドッキング\n,\tバックシャン\n,\tバックコンシャス\n,\tもこもこ\n,\tモコモコ\n,\tふわふわ\n,\tフード付き\n,\tファスナー\n,\tポケット\n,\tハイウエスト\n,\tリブ\n,\t前開き\n,\t2way\n,\t3way\n,\tリバーシブル\n,\tウエストゴム\n,\tケーブルニット\n,\tリブニット\n,\tクロシェ\n,\t編み込み\n,\t透け感\n,\tシースルー\n,\t伸縮性\n,\tキルティング\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t素材\n:\t綿\n,\t麻\n,\tリネン\n,\tポリエステル\n,\tデニム\n,\tブルーデニム\n,\tカラーデニム\n,\tキルティング\n,\tニット\n,\tサマーニット\n,\tフリース\n,\tウール\n,\tダウン\n,\tボア\n,\tレザー\n,\tPU\n,\tファー\n,\tフェイクファー\n,\t薄手\n,\t厚手\n,\t裏起毛\n,\tフランネル\n,\tコーデュロイ\n,\tスウェード\n,\tベロア\n,\t異素材MIX\n,\tベルベット\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tセット\n:\t上下セット\n,\t2点セット\n,\t3点セット\n,\t4点セット\n,\t5点セット\n,\tツーピース\n,\tスリーピース\n,\tお得\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tイメージ\n:\tかわいい\n,\t大人可愛い\n,\tきれいめ\n,\tシンプル\n,\tカジュアル\n,\t大人\n,\t上品\n,\tおしゃれ\n,\tお洒落\n,\tかっこいい\n,\tレトロ\n,\tアジアン\n,\tエスニック\n,\tエキゾチック\n,\t大人可愛い\n,\t大人女子\n,\tこなれ感\n,\tラフ\n,\tメンズライク\n,\tマニッシュ\n,\tボーイッシュ\n,\tスポーティー\n,\tラブリー\n,\tキュート\n,\tガーリー\n,\tルーズ\n,\t個性的\n,\tクール\n,\tモード系\n,\tセクシー\n,\tエレガント\n,\tモダン\n,\t主役級\n,\t存在感\n,\tフォーマル\n,\tとろみ感\n,\t抜け感\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t柄\n:\t無地\n,\t柄\n,\t花柄\n,\t小花柄\n,\tフラワー\n,\tチェック柄\n,\t格子柄\n,\t千鳥格子\n,\tグレンチェック\n,\tドット柄\n,\t水玉\n,\tボーダー\n,\tストライプ\n,\tヒョウ柄\n,\tレオパード\n,\tセブラ柄\n,\t牛柄\n,\tアニマル柄\n,\tリーフ柄\n,\tボタニカル\n,\tプリント\n,\tキャラクター\n,\tシマ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t季節・行事\n:\t春\n,\t夏\n,\t秋\n,\t冬\n,\tオールシーズン\n,\tシーズンレス\n,\t誕生日\n,\t成人式\n,\t入学式\n,\t入園式\n,\t卒業式\n,\t卒園式\n,\t謝恩会\n,\t結婚式\n,\t二次会\n,\t披露宴\n,\t冠婚葬祭\n,\t母の日\n,\tハロウィン\n,\tクリスマス\n,\tバレンタイン\n,\t2020\n,\t2021\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t年代・性別\n:\t10代\n,\t20代\n,\t30代\n,\t40代\n,\t50代\n,\t60代\n,\tレディース\n,\tメンズ\n,\tペア\n,\t女性用\n,\t男性用\n,\t男女兼用\n,\tママ\n,\tマタニティ\n,\tキッズ\n,\t女の子\n,\t男の子\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\t場所\n:\tオフィス\n,\tビジネス\n,\tOL\n,\t通勤\n,\t学生\n,\t通学\n,\tデート\n,\tお出かけ\n,\t公園デビュー\n,\t女子会\n,\tお泊まり\n,\t休日\n,\t運動\n,\tジム\n,\tヨガ\n,\tアウトドア\n,\tパーティー\n,\tイベント\n,\tリゾート\n,\t旅行\n,\t海\n,\tプール\n,\tリクルート\n,\t就活\n,\t高原\n,\tホテル\n,\tガーデン\n,\tレストラン\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tその他\n:\t着回し\n,\t普段使い\n,\t重ね着\n,\tお揃い\n,\t双子\n,\t韓国\n,\t韓国系\n,\tオルチャン\n,\tファッション\n,\tコーデ\n,\tスタイル\n,\t楽ちん\n,\tir\n,\t暖かい\n,\t防寒\n,\tモテ\n,\tダメージ\n,\t穴あき\n,\t体系カバー\n,\t美脚\n,\t脚長\n,\tプレゼント\n,\tギフト\n,\t新作\n,\t定番\n,\tプチプラ\n,\t激安\n,\t安い\n,\t送料無料\n,\tトレンド\n,\t流行\n,\tインスタ映え\n,\t即納\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tサイズ\n:\tサイズ\n,\tXXS\n,\tXS\n,\tS\n,\tM\n,\tL\n,\tXL\n,\t2XL\n,\t3XL\n,\t4XL\n,\t5XL\n,\t6XL\n,\t小さいサイズ\n,\t大きいサイズ\n,\tフリーサイズ\n,\t大きい\n,\t大きめ\n,\tビッグサイズ\n,\tゆったり\n,\tゆる\n,\tサイズ\n,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t,\t;\tカラー\n:\t色展開\n,\t白\n,\tホワイト\n,\t黒\n,\tブラック\n,\t赤\n,\tレッド\n,\t青\n,\tブルー\n,\t緑\n,\tグリーン\n,\t紫\n,\tパープル\n,\t茶色\n,\tブラウン\n,\t灰色\n,\tグレー\n,\t黄色\n,\tオフホワイト\n,\tベージュ\n,\tカーキ\n,\tイエロー\n,\tピンク\n,\tオレンジ\n,\t水色\n,\tワインレッド\n,\tネイビー\n,\t金色\n,\t銀色\n,\tゴールド\n,\tシルバー\n,\tパステルカラー\n,\tくすみカラー\n,\t大人カラー\n,\tベイクドカラー\n,\tバイカラー\n,\tモノトーン\n,\t春カラー\n,\t秋カラー\n,\tニュアンスカラー\n,\tカラバリ\n,\tミリタリー\n,\t光沢\n,\tメタリック\n,\tアプリコット\n,\tライトブルー\n,\t,\t,\t,\t,\t,\t";
@@ -35,6 +37,9 @@ const pool = new Pool({
 const app = express();
 
 const init = () => {
+    pool.query(`DROP TABLE IF EXISTS invitation`);
+    pool.query(`DROP TABLE IF EXISTS bots`);
+    pool.query(`DROP TABLE IF EXISTS users`);
     pool.query(`CREATE TABLE IF NOT EXISTS users
         (
             email           VARCHAR(50) NOT NULL,
@@ -46,28 +51,25 @@ const init = () => {
             subscription    VARCHAR(30)
         )
     `);
-};
-
-const botTable = () => {
     pool.query(`CREATE TABLE IF NOT EXISTS bots
         (
             owner           VARCHAR(50) NOT NULL,
             email           VARCHAR(50) NOT NULL,
             password        VARCHAR(128),
+            descriptions    TEXT[],
             items           TEXT,
             colors          TEXT,
             header          TEXT,
             footer          TEXT,
-            owner_auth_token    VARCHAR(32) NOT NULL,
+            owner_refresh_token    VARCHAR(32) NOT NULL,
             subscription    VARCHAR(30),
             token           VARCHAR(32) NOT NULL,
             status          boolean
         )
     `)
-}
+};
 
 init();
-botTable();
 
 const mailSender = (email, text) => {
     const transporter = mailer.createTransport({
@@ -100,25 +102,31 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({error: 'Unauthorized'});
+const isBot = async (authHeader) => {
+    if (authHeader !== undefined) {
+        const token = authHeader && authHeader.split(' ')[1];
+        const decoded = jwt.decode(token, "Oriental Wind");
+        if (decoded) {
+            try {
+                const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${decoded.email}'`);
+                if (queryResult.rowCount > 0) {
+                    return queryResult.rows.at(0);
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        } else return null;
     }
-
-    jwt.verify(token, "Oriental Wind", (error, decoded) => {
-        if (err) {
-            return res.status(403).json({error: "Forbidden"});
-        }
-        req.user = decoded;
-        next();
-    })
+    return null;
 }
 
-app.get("/descriptions", (req, res) => {
-    pool.query(`SELECT descriptions FROM users WHERE email = '${req.query.email}'`, (error, result) => {
+app.get("/descriptions", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT descriptions FROM ${table} WHERE email = '${req.query.email}'`, (error, result) => {
         let descriptions = [];
         if (
             !error &&
@@ -135,9 +143,13 @@ app.get("/descriptions", (req, res) => {
     });
 });
 
-app.post("/descriptions", (req, res) => {
+app.post("/descriptions", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
     pool.query(
-        `UPDATE users SET descriptions[${req.body.no}] = '${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${req.body.email
+        `UPDATE ${table} SET descriptions[${req.body.no}] = '${req.body.data.map((t) => `${t.header}:\t${t.keywords.join(",\t")}`).join(";\t")}' WHERE email='${req.body.email
         }'`,
         (error) => {
             if (error) return res.status(400).json({ error });
@@ -146,7 +158,9 @@ app.post("/descriptions", (req, res) => {
     );
 });
 
-app.get("/me", (req, res) => {
+app.get("/me", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
     axios
         .get("https://api.thebase.in/1/users/me", {
             headers: {
@@ -154,6 +168,14 @@ app.get("/me", (req, res) => {
             },
         })
         .then((response) => {
+            if (bot_data) {
+                return res.status(200).json({
+                    result: "success",
+                    user: {
+                        mail_address: bot_data.email
+                    }
+                })
+            }
             return res.status(200).json({
                 result: "success",
                 user: response.data.user,
@@ -167,10 +189,13 @@ app.get("/me", (req, res) => {
         });
 });
 
-app.post("/credentials", (req, res) => {
+app.post("/credentials", async (req, res) => {
+    const authHeader = req.headers['authorization'];
     const accessToken = req.body.accessToken;
-    const refreshToken = req.body.refreshToken;
+    let refreshToken = req.body.refreshToken;
     const authorizationCode = req.body.authorizationCode;
+    const bot_data = await isBot(authHeader);
+    if (bot_data) refreshToken = bot_data.owner_refresh_token;
     axios
         .get("https://api.thebase.in/1/users/me", {
             headers: {
@@ -223,7 +248,8 @@ app.post("/credentials", (req, res) => {
                                 refreshToken: response.data.refresh_token,
                             });
                         })
-                        .catch(() => {
+                        .catch((err) => {
+                            console.log(err.mess);
                             res.status(400).json({
                                 /*result: "failure"*/
                             });
@@ -232,18 +258,26 @@ app.post("/credentials", (req, res) => {
         });
 });
 
-app.get("/product", (req, res) => {
-    pool.query(`SELECT items, colors, header, footer FROM users WHERE email = '${req.query.email}'`, (error, result) => {
+app.get("/product", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT items, colors, header, footer FROM ${table} WHERE email = '${req.query.email}'`, (error, result) => {
         if (error && result.rows.length === 0) return res.status(404).json({ error });
         res.json({ productInfo: result.rows[0] });
     });
 });
 
-app.post("/product/info", (req, res) => {
-    pool.query(`SELECT * FROM users WHERE email = '${req.body.email}'`, (error, result) => {
+app.post("/product/info", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT * FROM ${table} WHERE email = '${req.body.email}'`, (error, result) => {
         if (error || result.rows.length === 0) return res.status(404).json({ error });
         pool.query(
-            `UPDATE users SET items = '${req.body.itemList.join(",\t")}', colors = '${req.body.colorList.join(",\t")}', header = '${req.body.header
+            `UPDATE ${table} SET items = '${req.body.itemList.join(",\t")}', colors = '${req.body.colorList.join(",\t")}', header = '${req.body.header
             }', footer = '${req.body.footer}' WHERE email = '${req.body.email}'`,
             (error) => {
                 if (error) return res.status(400).json({ error });
@@ -255,10 +289,14 @@ app.post("/product/info", (req, res) => {
     });
 });
 
-app.post("/product/header-footer", (req, res) => {
-    pool.query(`SELECT * FROM users WHERE email = '${req.body.email}'`, (error, result) => {
+app.post("/product/header-footer", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT * FROM ${table} WHERE email = '${req.body.email}'`, (error, result) => {
         if (error || result.rows.length === 0) return res.status(404).json({ error });
-        pool.query(`UPDATE users SET header = '${req.body.header}', footer = '${req.body.footer}' WHERE email = '${req.body.email}'`, (error) => {
+        pool.query(`UPDATE ${table} SET header = '${req.body.header}', footer = '${req.body.footer}' WHERE email = '${req.body.email}'`, (error) => {
             if (error) return res.status(400).json({ error });
             res.json({
                 /*result: "success"*/
@@ -343,16 +381,27 @@ app.post("/product", async (req, res) => {
 
 app.get("/stripe/success", async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
-    pool.query(`SELECT * FROM users WHERE email = '${session.customer_email}'`, (error, result) => {
+    const bot_auth_token = req.query.bot_auth_token;
+    const bot_data = await isBot(bot_auth_token);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT * FROM ${table} WHERE email = '${session.customer_email}'`, (error, result) => {
         if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
-        if (result.rows.length === 0)
+        if (result.rows.length === 0) {
             pool.query(
-                `INSERT INTO users(email, descriptions, items, colors, header, footer, subscription) VALUES ('${session.customer_email}', '{"${DEFAULT_TEMPLATE_1}", "${DEFAULT_TEMPLATE_2}", "${DEFAULT_TEMPLATE_3}", "${DEFAULT_TEMPLATE_4}", "${DEFAULT_TEMPLATE_5}", "", "", "", "", ""}', '${DEFAULT_ITEMS}', '${DEFAULT_COLORS}', '', '', '${session.subscription}')`,
+                `INSERT INTO ${table}(email, descriptions, items, colors, header, footer, subscription) VALUES ('${session.customer_email}', '{"${DEFAULT_TEMPLATE_1}", "${DEFAULT_TEMPLATE_2}", "${DEFAULT_TEMPLATE_3}", "${DEFAULT_TEMPLATE_4}", "${DEFAULT_TEMPLATE_5}", "", "", "", "", ""}', '${DEFAULT_ITEMS}', '${DEFAULT_COLORS}', '', '', '${session.subscription}')`,
                 (error) => {
                     if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
                     res.redirect(process.env.APP_URL || "http://localhost:3000");
                 }
             );
+        } else if (bot_data && bot_data.subscription === '') {
+            pool.query(
+                `UPDATE bots SET subscription = '${session.subscription}' WHERE email = '${bot_data.email}'`, (err, result) => {
+                    if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
+                    res.redirect(process.env.APP_URL || "http://localhost:3000");
+                });
+        }
         else {
             pool.query(
                 `UPDATE users SET descriptions = '{"${DEFAULT_TEMPLATE_1}", "${DEFAULT_TEMPLATE_2}", "${DEFAULT_TEMPLATE_3}", "${DEFAULT_TEMPLATE_4}", "${DEFAULT_TEMPLATE_5}", "", "", "", "", ""}', items = '${DEFAULT_ITEMS}', colors = '${DEFAULT_COLORS}', header = '', footer = '', subscription = '${session.subscription}' WHERE email = '${session.customer_email}'`,
@@ -366,8 +415,12 @@ app.get("/stripe/success", async (req, res) => {
 });
 
 app.post("/stripe/check", async (req, res) => {
-    pool.query(`SELECT subscription FROM users WHERE email = '${req.body.email}'`, async (error, result) => {
-        if (error || result.rows.length === 0 || result.rows[0].subscription === null) return res.status(404).json({ error });
+    const authHeader = req.headers['authorization'];
+    const bot_data = await isBot(authHeader);
+    let table = "users";
+    if (bot_data) table = "bots";
+    pool.query(`SELECT subscription FROM ${table} WHERE email = '${req.body.email}'`, async (error, result) => {
+        if (error || result.rows.length === 0 || result.rows[0].subscription === null || result.rows[0].subscription === "") return res.status(404).json({ error });
         const subscription = await stripe.subscriptions.retrieve(result.rows[0].subscription);
         if (subscription.current_period_end < Math.floor(Date.now() / 1000)) res.json({ result: "failure" });
         else res.json({ result: "success", interval: subscription.plan.interval });
@@ -378,23 +431,21 @@ app.post("/invite", async (req, res) => {
     const randomBytes = crypto.randomBytes(16);
     const iCode = randomBytes.toString('hex');
     const email = req.body.email;
-    const authToken = req.body.owner_auth_token;
+    const refreshToken = req.body.owner_refresh_token;
     const owner_email = req.body.owner_email;
 
     try {
         // Check if email exists in invitation table
         let queryResult = await pool.query('SELECT * FROM bots WHERE email = $1', [email]);
         const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
-        console.log(ownerInfo.rows.at(0).email);
 
-        await pool.query(`DROP TABLE IF EXISTS invitation`);
         if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
         const owner = ownerInfo.rows.at(0);
         if (queryResult.rowCount === 0) {
-            queryResult = await pool.query('INSERT INTO bots (owner, email, password, items, colors, header, footer, owner_auth_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
-            [owner_email, email, "", owner.items, owner.colors, owner.header, owner.footer, iCode, "", authToken, true]);
+            queryResult = await pool.query('INSERT INTO bots (owner, email, password, descriptions, items, colors, header, footer, owner_refresh_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+                [owner_email, email, "", owner.descriptions, owner.items, owner.colors, owner.header, owner.footer, refreshToken, "", iCode, true]);
 
-            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invite_id/' + iCode;
+            const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invited/' + iCode;
 
             if (mailSender(email, inviteLink)) {
                 return res.json({ invited: 1 });
@@ -412,12 +463,11 @@ app.post("/invite", async (req, res) => {
 
 app.get("/invited/:id", async (req, res) => {
     const id = req.params.id;
-    console.log(id);
     try {
         const queryResult = await pool.query(`SELECT * FROM bots WHERE token = '${id}'`);
-        if (queryResult.rowCount === 0) return res.json({ info: "Invalid"});
-        if (queryResult.rows.at(0).status === false) return res.json({info: "already registered"});
-        return res.json({info: "okay", email: queryResult.rows.at(0).email});
+        if (queryResult.rowCount === 0) return res.json({ info: "Invalid" });
+        if (queryResult.rows.at(0).status === false) return res.json({ info: "already registered" });
+        return res.json({ info: "okay", email: queryResult.rows.at(0).email });
     }
     catch (error) {
         console.log(error.mess);
@@ -428,36 +478,72 @@ app.get("/invited/:id", async (req, res) => {
 });
 
 app.get("/getBots", async (req, res) => {
-    pool.query(`SELECT * FROM bots WHERE owner = '${req.body.owner}'`, async (error, result) => {
+    pool.query(`SELECT * FROM bots WHERE owner = '${req.query.email}'`, async (error, result) => {
         if (error) return res.status(404).json({ error });
-        return res.json({ result: "success", bots: result });
+        let resultData = [];
+        for (let i = 0; i < result.rowCount; i++) {
+            resultData.push({ email: result.rows.at(i).email });
+        }
+        return res.json({ result: "success", bots: resultData });
     });
 });
 
+app.get("/deleteBots", async (req, res) => {
+    const email = req.query.email;
+    const owner = req.query.owner;
+    try {
+        const queryResult = pool.query(`DELETE FROM bots WHERE owner='${owner}' AND email='${email}'`);
+        return res.status(200).json({ status: 'okay' }); 
+    } catch (err) {
+        return res.status(400).json({ error: err.mess });
+    }
+})
+
+const passwordHasher = async (password) => {
+    const hashPassword = await bcrypt.hash(password, '$2b$10$dITd5TEsPX/x7F2MF3Z5w.');
+    return hashPassword;
+}
+
 app.post("/bots/signup", async (req, res) => {
-    pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`, async (error, result) => {
-        if (error) return res.status(404).json({ error });
-        if (result.rowCount > 0){
-            const token = jwt.sign({email: req.body.email}, "Oriental Wind");
-            return res.json({status: "okay", token: token});
+    const password = req.body.password;
+    const email = req.body.email;
+    const hashPassword = await passwordHasher(password);
+    try {
+        const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${email}'`);
+        if (queryResult.rowCount > 0 && queryResult.rows.at(0).status === true) {
+            pool.query(`UPDATE bots SET password = '${hashPassword}', status = ${false} WHERE email = '${email}'`);
+            const token = jwt.sign({ email: email }, "Oriental Wind");
+            return res.json({ status: "okay", token: token });
+        } else {
+            return res.json({ status: "warn", error: "already signed up" });
         }
-    });
+    } catch (error) {
+        return res.status(500).json({ error: error.mess });
+    }
 });
 
 app.post("/bots/signin", async (req, res) => {
-    const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${req.body.email}'`);
+    const password = req.body.password;
+    const email = req.body.email;
+    const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${email}'`);
     if (queryResult.rowCount > 0) {
-        if (queryResult.rows.at(0).password === req.body.password){
-            const token = jwt.sign({email: req.body.email}, "Oriental Wind");
-            return res.json({status: "okay", token: token});
+        const hashPassword = await passwordHasher(password);
+        if (queryResult.rows.at(0).password === hashPassword) {
+            const token = jwt.sign({ email: email }, "Oriental Wind");
+            return res.json({ status: "okay", token: token });
         }
-        else return res.json({status: "no"});
+        else return res.json({ status: "no" });
     }
-    else return res.json({status: "not found"});
+    else return res.json({ status: "not found" });
 });
 
-app.get('/authorize', authenticateToken, (req, res) => {
-    res.json({status: 'authorized'});
+app.get('/checkAuthentication', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const decoded = jwt.decode(token, "Oriental Wind");
+    if (decoded) {
+        res.json({ status: 'authorized' });
+    } else res.json({ status: 'unauthorized' });
 });
 
 app.listen(process.env.PORT || 5000, () => {
