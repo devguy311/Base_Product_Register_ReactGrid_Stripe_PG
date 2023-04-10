@@ -196,6 +196,8 @@ app.post("/credentials", async (req, res) => {
     const authorizationCode = req.body.authorizationCode;
     const bot_data = await isBot(authHeader);
     if (bot_data) refreshToken = bot_data.owner_refresh_token;
+    console.log("auth Header: ", authHeader);
+    console.log("bot data: ", bot_data);
     if (authHeader !== undefined && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     axios
         .get("https://api.thebase.in/1/users/me", {
