@@ -37,9 +37,6 @@ const pool = new Pool({
 const app = express();
 
 const init = () => {
-    pool.query(`DROP TABLE IF EXISTS invitation`);
-    pool.query(`DROP TABLE IF EXISTS bots`);
-    pool.query(`DROP TABLE IF EXISTS users`);
     pool.query(`CREATE TABLE IF NOT EXISTS users
         (
             email           VARCHAR(50) NOT NULL,
