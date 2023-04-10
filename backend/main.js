@@ -107,7 +107,7 @@ const isBot = async (authHeader) => {
             try {
                 const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${decoded.email}'`);
                 if (queryResult.rowCount > 0) {
-                    return queryResult.rows.at(0);
+                    return queryResult.rows[0];
                 }
                 return null;
             } catch (e) {
@@ -437,9 +437,8 @@ app.post("/invite", async (req, res) => {
         const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
 
         if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
-        console.log("owner Info: ", ownerInfo);
-        console.log(ownerInfo.rows.at(0));
-        const owner = ownerInfo.rows.at(0);
+        console.log("Owner Info: ", ownerInfo.rows[0]);
+        const owner = ownerInfo.rows[0];
         if (queryResult.rowCount === 0) {
             queryResult = await pool.query('INSERT INTO bots (owner, email, password, descriptions, items, colors, header, footer, owner_refresh_token, subscription, token, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
                 [owner_email, email, "", owner.descriptions, owner.items, owner.colors, owner.header, owner.footer, refreshToken, "", iCode, true]);
@@ -465,8 +464,8 @@ app.get("/invited/:id", async (req, res) => {
     try {
         const queryResult = await pool.query(`SELECT * FROM bots WHERE token = '${id}'`);
         if (queryResult.rowCount === 0) return res.json({ info: "Invalid" });
-        if (queryResult.rows.at(0).status === false) return res.json({ info: "already registered" });
-        return res.json({ info: "okay", email: queryResult.rows.at(0).email });
+        if (queryResult.rows[0].status === false) return res.json({ info: "already registered" });
+        return res.json({ info: "okay", email: queryResult.rows[0].email });
     }
     catch (error) {
         console.log(error);
@@ -509,7 +508,7 @@ app.post("/bots/signup", async (req, res) => {
     const hashPassword = await passwordHasher(password);
     try {
         const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${email}'`);
-        if (queryResult.rowCount > 0 && queryResult.rows.at(0).status === true) {
+        if (queryResult.rowCount > 0 && queryResult.rows[0].status === true) {
             pool.query(`UPDATE bots SET password = '${hashPassword}', status = ${false} WHERE email = '${email}'`);
             const token = jwt.sign({ email: email }, "Oriental Wind");
             return res.json({ status: "okay", token: token });
@@ -527,7 +526,7 @@ app.post("/bots/signin", async (req, res) => {
     const queryResult = await pool.query(`SELECT * FROM bots WHERE email = '${email}'`);
     if (queryResult.rowCount > 0) {
         const hashPassword = await passwordHasher(password);
-        if (queryResult.rows.at(0).password === hashPassword) {
+        if (queryResult.rows[0].password === hashPassword) {
             const token = jwt.sign({ email: email }, "Oriental Wind");
             return res.json({ status: "okay", token: token });
         }
