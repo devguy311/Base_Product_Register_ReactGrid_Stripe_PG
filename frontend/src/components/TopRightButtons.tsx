@@ -10,7 +10,7 @@ const TopRightButtons = () => {
     }
     return (
         <>
-            <Button onClick={logout}>ログイン</Button>
+            <Button onClick={logout}>ログアウト</Button>
         </>
     );
 };
