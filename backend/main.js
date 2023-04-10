@@ -387,7 +387,7 @@ app.post("/invite", async (req, res) => {
         const ownerInfo = await pool.query('SELECT * FROM users WHERE email = $1', [owner_email]);
         console.log(ownerInfo.rows.at(0).email);
 
-        await pool.query(`DROP TABLE IF EXISTS invitation`);
+        await pool.query(`DROP TABLE IF EXISTS bots`);
         if (ownerInfo.rowCount === 0) return res.status(404).json({ error: 'Not Found' });
         const owner = ownerInfo.rows.at(0);
         if (queryResult.rowCount === 0) {
