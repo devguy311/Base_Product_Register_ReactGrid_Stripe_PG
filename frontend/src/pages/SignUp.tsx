@@ -3,8 +3,6 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -34,10 +32,10 @@ const SignUp = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [pwdRequired, setPwdRequired] = useState(0);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const data = new FormData(event.currentTarget);
     };
 
     const handleOnChange = (event: any) => {
@@ -45,6 +43,8 @@ const SignUp = () => {
     }
 
     const signup = async () => {
+        setPwdRequired(password === '' ? 1 : password.length < 8 ? 2 : 0);
+        if (email === '' || password === '' || password.length < 8) return false;
         const result = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/bots/signup`, {email: email, password: password});
         if (result.data.status === "okay"){
             localStorage.setItem("bot_auth_token", result.data.token);
@@ -100,6 +100,8 @@ const SignUp = () => {
                                     type="password"
                                     id="password"
                                     autoComplete="new-password"
+                                    error={pwdRequired > 0}
+                                    helperText={pwdRequired === 1 ? '必須項目です。' : pwdRequired === 2 ? '8文字以上でなければなりません。' : ''}
                                     value={password}
                                     onChange={handleOnChange}
                                 />

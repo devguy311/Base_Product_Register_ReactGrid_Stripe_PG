@@ -1,8 +1,8 @@
-import { useEffect, useState, cloneElement } from "react";
+import { useEffect, useState } from "react";
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import { Button, IconButton, ListItemAvatar, Typography } from "@mui/material";
+import { Button, IconButton, ListItemAvatar } from "@mui/material";
 import Box from '@mui/material/Box';
 import axios from "axios";
 import InviteModal from "./InviteModal";
@@ -12,6 +12,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PositionedSnackbar from "./Alert";
 import Avatar from '@mui/material/Avatar';
 import { AlertColor } from '@mui/material';
+import { useSelector } from 'react-redux'
+import type { RootState } from "../store/store";
 
 const Demo = styled('div')(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
@@ -23,6 +25,7 @@ const InvitePanel = () => {
     const [showSnackBar, setShowSnackBar] = useState(false);
     const [snackMessage, setSnackMessage] = useState("");
     const [alertType, setAlertType] = useState<AlertColor>("success");
+    const inviteStatus = useSelector((state: RootState) => state.inviter.state);
 
     const handleOpenModal = () => {
         setIsOpen(true);
@@ -48,7 +51,7 @@ const InvitePanel = () => {
 
     useEffect(() => {
         setBotList();
-    }, []);
+    }, [inviteStatus]);
 
     const deleteBot = async (email: string) => {
         const owner = localStorage.getItem("email");

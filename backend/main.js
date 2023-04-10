@@ -453,8 +453,7 @@ app.post("/invite", async (req, res) => {
             return res.json({ invited: 2 });
         }
     } catch (error) {
-        console.log("onwer info: ", error);
-        return res.status(500).json({ error: error.message });
+        return res.json({ invited: 3 });
     }
 });
 

@@ -9,11 +9,12 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import axios from "axios";
-import PositionedSnackbar from "./Alert";
-import { AlertColor } from '@mui/material';
+import type { RootState } from '../store/store';
+import { useDispatch } from 'react-redux';
+import { invited } from '../redux/inviteReducer';
 
 const filter = createFilterOptions<string>();
 
@@ -70,10 +71,10 @@ const checkEmailType = (value: string) => {
 }
 
 const InvitationDialog = ({ isOpen, handleClose }: Props) => {
+  const dispatch = useDispatch();
 
   const [mailList, setMailList] = useState<string[]>([]);
   const [isValid, setIsValid] = useState(true);
-  const [invited, setInvited] = useState(0);
 
   const handleChange = (event: SyntheticEvent, newValue: string[]) => {
     setMailList(newValue);
@@ -92,7 +93,7 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
     mailList.forEach((email) => {
       const data = { email: email, owner_refresh_token: auth_code, owner_email: owner_email };
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
-        setInvited(result.data.invited);
+          dispatch(invited(Number(result.data.invited)));
       });
     });
     handleCloseModal();
@@ -100,7 +101,6 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
 
   const handleCloseModal = () => {
     setMailList([]);
-    setInvited(0);
     handleClose();
   }
 
