@@ -425,8 +425,11 @@ app.post("/stripe/check", async (req, res) => {
     const authHeader = req.headers['authorization'];
     const bot_data = await isBot(authHeader);
     let table = "users";
-    if (bot_data) table = "bots";
-        if (authHeader !== undefined && authHeader !== null && authHeader !== 'Bearer null' && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
+    if (bot_data) {
+        table = "bots";
+        return res.json({result: "success", interva: "forever"});
+    }
+    if (authHeader !== undefined && authHeader !== null && authHeader !== 'Bearer null' && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT subscription FROM ${table} WHERE email = '${req.body.email}'`, async (error, result) => {
         if (error || result.rows.length === 0 || result.rows[0].subscription === null || result.rows[0].subscription === "") return res.status(404).json({ error });
         const subscription = await stripe.subscriptions.retrieve(result.rows[0].subscription);
