@@ -196,8 +196,6 @@ app.post("/credentials", async (req, res) => {
     const authorizationCode = req.body.authorizationCode;
     const bot_data = await isBot(authHeader);
     if (bot_data) refreshToken = bot_data.owner_refresh_token;
-    console.log("auth Header: ", authHeader);
-    console.log("bot data: ", bot_data);
         if (authHeader !== undefined && authHeader !== null && authHeader !== 'Bearer null' && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     axios
         .get("https://api.thebase.in/1/users/me", {
@@ -387,11 +385,7 @@ app.post("/product", async (req, res) => {
 
 app.get("/stripe/success", async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
-    const bot_auth_token = req.query.bot_auth_token;
-    const bot_data = await isBot(bot_auth_token);
     let table = "users";
-    if (bot_data) table = "bots";
-        if (authHeader !== undefined && authHeader !== null && authHeader !== 'Bearer null' && bot_data === null) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}/404`);
     pool.query(`SELECT * FROM ${table} WHERE email = '${session.customer_email}'`, (error, result) => {
         if (error) return res.redirect(`${process.env.APP_URL || "http://localhost:3000"}?backend_error`);
         if (result.rows.length === 0) {
