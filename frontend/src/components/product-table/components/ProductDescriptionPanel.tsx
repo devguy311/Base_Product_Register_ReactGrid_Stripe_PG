@@ -118,14 +118,14 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     const handleItemList = (_event: SyntheticEvent, newValue: string[]) => {
-        if (newValue.length < 5) {
+        if (newValue.length < 21) {
             setItemList(newValue);
             setItemSizes(init2DArray(sizeList.length, newValue.length));
         }
     };
 
     const handleColorList = (_event: SyntheticEvent, newValue: string[]) => {
-        if (newValue.length < 5) {
+        if (newValue.length < 21) {
             setColorList(newValue);
             setItemStocks(init2DArray(newValue.length, sizeList.length));
         }
@@ -318,7 +318,7 @@ const ProductDescriptionPanel = (props: any) => {
                                     renderInput={(params) => <TextField {...params} />}
                                     noOptionsText="オプションなし"
                                 />
-                                <FormHelperText>{(itemList || []).length}/4</FormHelperText>
+                                <FormHelperText>{(itemList || []).length}/20</FormHelperText>
                             </Grid>
                             <Grid item xs={2}>
                                 色展開
@@ -335,7 +335,7 @@ const ProductDescriptionPanel = (props: any) => {
                                     renderInput={(params) => <TextField {...params} />}
                                     noOptionsText="オプションなし"
                                 />
-                                <FormHelperText>{(colorList || []).length}/4</FormHelperText>
+                                <FormHelperText>{(colorList || []).length}/20</FormHelperText>
                             </Grid>
                         </Grid>
                         <Box sx={{ mb: 2 }}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Box, Typography, Modal } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import LoadingButton from '@mui/lab/LoadingButton';
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -18,11 +19,19 @@ const style = {
 const TopRightButtons = () => {
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
+    const [decision, setDecision] = useState(false);
+    const handleNo = () => {
+        setDecision(false);
+    }
+    const handleOpen = () => {
+        setDecision(true);
+    }
     const handleClose = () => {
         setOpen(false);
         window.location.reload();
     }
     const [amount, setAmount] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const logout = () => {
         localStorage.clear();
@@ -30,6 +39,8 @@ const TopRightButtons = () => {
         window.location.reload();
     }
     const cancelSubscription = async () => {
+        setDecision(false);
+        setLoading(true);
         const email = localStorage.getItem("email");
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/stripe/cancel`, { email: email }, {
             headers: { 'Authorization': `Bearer ${null}` }
@@ -37,11 +48,12 @@ const TopRightButtons = () => {
         if (response.data.result === 'success') {
             setAmount(response.data.amount);
             setOpen(true);
+            setLoading(false);
         }
     }
     return (
         <>
-            <Button onClick={cancelSubscription}>購読のキャンセル</Button>
+            <LoadingButton onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton>
             <Button onClick={logout}>ログアウト</Button>
             <Modal
                 open={open}
@@ -51,11 +63,26 @@ const TopRightButtons = () => {
             >
                 <Box sx={style}>
                     <Typography id="modal-modal-title" variant="h6" component="h2">
-                    お金が返金されました。
+                        お金が返金されました。
                     </Typography>
                     <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                    返金された量 ： {amount}￥
+                        返金された量 ： {amount}￥
                     </Typography>
+                </Box>
+            </Modal>
+
+            <Modal
+                open={decision}
+                onClose={handleNo}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={{ ...style}}>
+                    本当にサブスクリプションをキャンセルしますか？
+                    <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row' }}>
+                        <Button variant="contained" onClick={cancelSubscription}>はい</Button>
+                        <Button variant="contained" onClick={handleNo} sx={{marginLeft: '8px'}}>いいえ</Button>
+                    </div>
                 </Box>
             </Modal>
         </>
