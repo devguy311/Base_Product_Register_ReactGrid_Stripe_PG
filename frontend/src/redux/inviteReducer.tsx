@@ -13,8 +13,8 @@ export const inviteSlice = createSlice({
     name: 'inviter',
     initialState,
     reducers: {
-        invited: (state, action: PayloadAction<number>) => {
-            state.state = action.payload;
+        invited: (state) => {
+            state.state ++;
         }
     }
 });

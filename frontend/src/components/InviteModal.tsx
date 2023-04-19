@@ -93,7 +93,7 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
     mailList.forEach((email) => {
       const data = { email: email, owner_refresh_token: auth_code, owner_email: owner_email };
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
-          dispatch(invited(Number(result.data.invited)));
+          dispatch(invited());
       });
     });
     handleCloseModal();

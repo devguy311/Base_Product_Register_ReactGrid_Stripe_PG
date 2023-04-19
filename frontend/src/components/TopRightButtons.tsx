@@ -35,8 +35,7 @@ const TopRightButtons = (props: any) => {
 
     const logout = () => {
         localStorage.clear();
-        navigate("/");
-        window.location.reload();
+        window.location.href=`https://api.thebase.in/1/users/logout?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`;
     }
     const cancelSubscription = async () => {
         setDecision(false);
