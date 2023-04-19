@@ -34,6 +34,14 @@ const pool = new Pool({
     host: process.env.POSTGRES_HOST || "localhost",
 });
 
+const transporter = mailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'vulpeswhiteint98@gmail.com',
+        pass: 'qinnfhobeqpebvsz'
+    }
+});
+
 const app = express();
 
 const init = () => {
@@ -69,30 +77,6 @@ const init = () => {
 init();
 
 const mailSender = (email, text) => {
-    const transporter = mailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'vulpeswhiteint98@gmail.com',
-            pass: 'qinnfhobeqpebvsz'
-        }
-    });
-
-    const mailOptions = {
-        from: 'vulpeswhiteint98@gmail.com',
-        to: email,
-        subject: 'Invite',
-        text: text
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.log(error);
-            return false;
-        } else {
-            console.log('Email sent: ' + info.response);
-            return true;
-        }
-    });
 }
 
 app.use(cors());
@@ -468,11 +452,23 @@ app.post("/invite", async (req, res) => {
 
             const inviteLink = (process.env.APP_URL || 'http://localhost:3000') + '/invited/' + iCode;
 
-            if (mailSender(email, inviteLink)) {
-                return res.json({ invited: 1 });
-            } else {
-                return res.json({ invited: 3 });
-            }
+            const mailOptions = {
+                from: 'vulpeswhiteint98@gmail.com',
+                to: email,
+                subject: 'Invite',
+                text: inviteLink
+            };
+
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log(error);
+                    return res.json({ invited: 3 });
+                } else {
+                    console.log('Email sent: ' + info.response);
+                    return res.json({ invited: 1 });
+                }
+            });
+
         } else {
             return res.json({ invited: 2 });
         }
