@@ -16,7 +16,7 @@ const style = {
     p: 4,
 };
 
-const TopRightButtons = () => {
+const TopRightButtons = (props: any) => {
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [decision, setDecision] = useState(false);
@@ -53,8 +53,10 @@ const TopRightButtons = () => {
     }
     return (
         <>
-            <LoadingButton onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton>
-            <Button onClick={logout}>ログアウト</Button>
+            <div style={{ marginTop: '7px'}}>
+                {!props.isBot ? <LoadingButton onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton> : ""}
+                <Button onClick={logout}>ログアウト</Button>
+            </div>
             <Modal
                 open={open}
                 onClose={handleClose}

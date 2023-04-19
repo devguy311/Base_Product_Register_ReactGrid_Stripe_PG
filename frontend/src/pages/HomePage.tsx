@@ -210,7 +210,7 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
-                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                    <Box sx={{ borderBottom: 1, borderColor: "divider", display: 'flex', justifyContent: 'space-between' }}>
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
                             <Tab label="設定" {...a11yProps(0)} />
                             <Tab label="アパレル" {...a11yProps(1)} />
@@ -224,8 +224,8 @@ const HomePage = () => {
                             <Tab label="テンプレート 4" {...a11yProps(9)} />
                             <Tab label="テンプレート 5" {...a11yProps(10)} />
                             {!botAuthToken ? <Tab label="商品登録者" {...a11yProps(11)} /> : ""}
-                            <TopRightButtons />
                         </Tabs>
+                        <TopRightButtons isBot={botAuthToken} />
                     </Box>
                     {tabIndex === 0 && <SettingPanel user={user} />}
                     {tabIndex === 1 && <ProductPanel email={user?.mail_address} no={0} tabName={"アパレル"} />}
