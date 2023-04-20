@@ -35,7 +35,7 @@ const TopRightButtons = (props: any) => {
 
     const logout = () => {
         localStorage.clear();
-        window.location.href=`https://api.thebase.in/1/users/logout?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`;
+        window.location.href = !props.isBot ? `https://api.thebase.in/1/users/logout?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items` : "/signin";
     }
     const cancelSubscription = async () => {
         setDecision(false);
@@ -52,7 +52,7 @@ const TopRightButtons = (props: any) => {
     }
     return (
         <>
-            <div style={{ marginTop: '7px'}}>
+            <div style={{ marginTop: '7px' }}>
                 {!props.isBot ? <LoadingButton onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton> : ""}
                 <Button onClick={logout}>ログアウト</Button>
             </div>
@@ -78,11 +78,11 @@ const TopRightButtons = (props: any) => {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={{ ...style}}>
+                <Box sx={{ ...style }}>
                     本当にサブスクリプションをキャンセルしますか？
-                    <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row' }}>
                         <Button variant="contained" onClick={cancelSubscription}>はい</Button>
-                        <Button variant="contained" onClick={handleNo} sx={{marginLeft: '8px'}}>いいえ</Button>
+                        <Button variant="contained" onClick={handleNo} sx={{ marginLeft: '8px' }}>いいえ</Button>
                     </div>
                 </Box>
             </Modal>

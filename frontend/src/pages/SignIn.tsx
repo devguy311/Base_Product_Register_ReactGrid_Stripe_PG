@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
+import LoadingButton from '@mui/lab/LoadingButton';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
@@ -34,6 +34,8 @@ const SignIn = () => {
     const [password, setPassword] = useState("");
     const [mailRequired, setMailRequired] = useState(0);
     const [pwdRequired, setPwdRequired] = useState(0);
+    const [subscriptionError, setSubscriptionError] = useState(0);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -52,22 +54,45 @@ const SignIn = () => {
         setEmail(event.target.value);
     }
 
-    const signin = async () => {
-        setMailRequired(email === '' ? 1 : 0);
-        setPwdRequired(password === '' ? 1 : password.length < 8 ? 2 : 0);
-        if (!checkEmailType(email)){
-            setMailRequired(2);
-            return false;
-        }
-        if (email === '' || password === '' || password.length < 8) return false;
+const signin = async () => {
+    setLoading(true);
+    setMailRequired(email === '' ? 1 : 0);
+    setPwdRequired(password === '' ? 1 : password.length < 8 ? 2 : 0);
+    if (!checkEmailType(email)) {
+        setMailRequired(2);
+        setLoading(false);
+        return false;
+    }
+    if (email === '' || password === '' || password.length < 8) {
+        setLoading(false);
+        return false;
+    }
+    try{ 
         const result = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/bots/signin`, { email: email, password: password });
         if (result.data.status === "okay") {
-            console.log("Okay");
-            localStorage.setItem("bot_auth_token", result.data.token);
-            navigate("/");
-        } else if (result.data.status === "not exist") { setMailRequired(3)}
-        else setMailRequired(3);
+            const token = result.data.token;
+            const headers = {'Authorization': `Bearer ${token}`};
+            const subscriptionResult = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/stripe/check`, {}, { headers });
+            if (subscriptionResult.data.result === 'success'){
+                localStorage.setItem("bot_auth_token", result.data.token);
+                navigate("/");
+            } else {
+                setSubscriptionError(subscriptionResult.data.result === 'failure' ? 1 : 2);
+            }
+        } else if (result.data.status === "not exist") {
+            setMailRequired(3);
+        }
+        else{
+            setMailRequired(3);
+        }
+    } catch(error) {
+        console.error(error);
+        setSubscriptionError(2);
+    } finally {
+        setLoading(false);
     }
+}
+
 
     useEffect(() => {
     }, []);
@@ -94,6 +119,7 @@ const SignIn = () => {
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 {mailRequired === 3 ? <Typography color={'red'}>ユーザー名またはパスワードが間違っています。</Typography> : ""}
+                                {subscriptionError === 1 ? <Typography color={'red'}>オーナーが購読していません。</Typography> : subscriptionError === 2 ? <Typography color={'red'}>オーナーは会員ではありません。</Typography> : ""}
                                 <TextField
                                     fullWidth
                                     required
@@ -123,14 +149,15 @@ const SignIn = () => {
                                 />
                             </Grid>
                         </Grid>
-                        <Button
+                        <LoadingButton
                             fullWidth
+                            loading = {loading}
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                             onClick={signin}
                         >
                             ログイン
-                        </Button>
+                        </LoadingButton>
                     </Box>
                 </Box>
                 <Copyright sx={{ mt: 5 }} />
