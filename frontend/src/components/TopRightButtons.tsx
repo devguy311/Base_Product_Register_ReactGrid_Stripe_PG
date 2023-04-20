@@ -52,10 +52,8 @@ const TopRightButtons = (props: any) => {
     }
     return (
         <>
-            <div style={{ marginTop: '7px' }}>
-                {!props.isBot ? <LoadingButton onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton> : ""}
-                <Button onClick={logout}>ログアウト</Button>
-            </div>
+            <Button onClick={logout}>ログアウト</Button>
+            {!props.isBot ? <LoadingButton sx={{position: 'absolute', right: '0%', marginTop: '7px'}} onClick={handleOpen} loading={loading} >購読のキャンセル</LoadingButton> : ""}
             <Modal
                 open={open}
                 onClose={handleClose}

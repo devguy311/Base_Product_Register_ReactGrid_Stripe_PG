@@ -217,7 +217,7 @@ const HomePage = () => {
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
-                    <Box sx={{ borderBottom: 1, borderColor: "divider", display: 'flex', justifyContent: 'space-between' }}>
+                    <Box sx={{ borderBottom: 1, borderColor: "divider", display: 'flex' }}>
                         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic product tabs">
                             <Tab label="設定" {...a11yProps(0)} />
                             <Tab label="アパレル" {...a11yProps(1)} />
