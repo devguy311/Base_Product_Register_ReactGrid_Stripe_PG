@@ -15,6 +15,7 @@ import axios from "axios";
 import type { RootState } from '../store/store';
 import { useDispatch } from 'react-redux';
 import { invited } from '../redux/inviteReducer';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 const filter = createFilterOptions<string>();
 
@@ -72,6 +73,7 @@ const checkEmailType = (value: string) => {
 
 const InvitationDialog = ({ isOpen, handleClose }: Props) => {
   const dispatch = useDispatch();
+  const [backdrop, setBackdrop] = useState(false);
 
   const [mailList, setMailList] = useState<string[]>([]);
   const [isValid, setIsValid] = useState(true);
@@ -87,16 +89,17 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
   }
 
   const sendInvite = () => {
+    setBackdrop(true);
     const auth_code = localStorage.getItem("refresh_token");
-    console.log(auth_code);
     const owner_email = localStorage.getItem("email");
     mailList.forEach((email) => {
       const data = { email: email, owner_refresh_token: auth_code, owner_email: owner_email };
-      axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then((result) => {
-          dispatch(invited());
-      });
+      axios.post(`${process.env.REACT_APP_BACKEND_URL}/invite`, data).then(() => {
+        dispatch(invited());
+        setBackdrop(false);
+        handleCloseModal();
+      })
     });
-    handleCloseModal();
   }
 
   const handleCloseModal = () => {
@@ -147,9 +150,9 @@ const InvitationDialog = ({ isOpen, handleClose }: Props) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button autoFocus onClick={sendInvite} variant="contained" endIcon={<SendIcon />}>
+          <LoadingButton autoFocus onClick={sendInvite} loading={backdrop} loadingPosition='end' variant="contained" endIcon={<SendIcon />}>
             招待を送る
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </BootstrapDialog>
     </>
