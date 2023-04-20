@@ -506,9 +506,8 @@ app.get("/getBots", async (req, res) => {
 
 app.get("/deleteBots", async (req, res) => {
     const email = req.query.email;
-    const owner = req.query.owner;
     try {
-        const queryResult = pool.query(`DELETE FROM bots WHERE owner='${owner}' AND email='${email}'`);
+        const queryResult = pool.query(`DELETE FROM bots WHERE email='${email}'`);
         return res.status(200).json({ status: 'okay' });
     } catch (err) {
         return res.status(400).json({ error: err.mess });

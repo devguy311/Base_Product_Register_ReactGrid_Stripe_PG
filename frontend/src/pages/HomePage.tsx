@@ -52,6 +52,11 @@ const HomePage = () => {
         setTabIndex(newValue);
     };
 
+    const gotoLogin = () => {
+        localStorage.clear();
+        window.location.href=`https://api.thebase.in/1/users/logout?response_type=code&client_id=${process.env.REACT_APP_CLIENT_ID}&redirect_uri=${window.location.origin}/redirect&scope=read_users_mail%20write_items`;
+    }
+
     const handlePaymentCheckout = async (paymentType: "yearly" | "monthly") => {
         const stripe = await getStripe();
         if (stripe === null) setPaymentStatus(PaymentStatus.UNPAID);
@@ -152,61 +157,63 @@ const HomePage = () => {
             ) : ""}
 
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus === PaymentStatus.UNPAID && (
-
-                <Grid container alignItems="center" style={{ height: '100vh' }} spacing={2} justifyContent={"center"}>
-                    <Grid item>
-                        <Card sx={{ maxWidth: 345 }} >
-                            <CardActionArea>
-                                <CardContent>
-                                    <Typography gutterBottom variant="h5" component="div">
-                                        製品購入
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ５３，７８４円。　／　年
-                                    </Typography>
-                                </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                                <LoadingButton
-                                    size="small"
-                                    loading={isYearlyButtonLoading}
-                                    color="primary"
-                                    variant="contained"
-                                    onClick={() => handlePaymentCheckout("yearly")}
-                                    disabled={!isYearlyButtonLoading && isMonthlyButtonLoading}
-                                >
-                                    払う
-                                </LoadingButton>
-                            </CardActions>
-                        </Card>
+                <>
+                <Button variant="contained" onClick={gotoLogin}>戻る</Button>
+                    <Grid container alignItems="center" style={{ height: '90vh' }} spacing={2} justifyContent={"center"}>
+                        <Grid item>
+                            <Card sx={{ maxWidth: 345 }} >
+                                <CardActionArea>
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="div">
+                                            製品購入
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            ５３，７８４円。　／　年
+                                        </Typography>
+                                    </CardContent>
+                                </CardActionArea>
+                                <CardActions>
+                                    <LoadingButton
+                                        size="small"
+                                        loading={isYearlyButtonLoading}
+                                        color="primary"
+                                        variant="contained"
+                                        onClick={() => handlePaymentCheckout("yearly")}
+                                        disabled={!isYearlyButtonLoading && isMonthlyButtonLoading}
+                                    >
+                                        払う
+                                    </LoadingButton>
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                        <Grid item>
+                            <Card sx={{ maxWidth: 345 }}>
+                                <CardActionArea>
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="div">
+                                            製品購入
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            ４，９８０円。　／　月
+                                        </Typography>
+                                    </CardContent>
+                                </CardActionArea>
+                                <CardActions>
+                                    <LoadingButton
+                                        size="small"
+                                        loading={isMonthlyButtonLoading}
+                                        color="primary"
+                                        variant="contained"
+                                        onClick={() => handlePaymentCheckout("monthly")}
+                                        disabled={!isMonthlyButtonLoading && isYearlyButtonLoading}
+                                    >
+                                        払う
+                                    </LoadingButton>
+                                </CardActions>
+                            </Card>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <Card sx={{ maxWidth: 345 }}>
-                            <CardActionArea>
-                                <CardContent>
-                                    <Typography gutterBottom variant="h5" component="div">
-                                        製品購入
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ４，９８０円。　／　月
-                                    </Typography>
-                                </CardContent>
-                            </CardActionArea>
-                            <CardActions>
-                                <LoadingButton
-                                    size="small"
-                                    loading={isMonthlyButtonLoading}
-                                    color="primary"
-                                    variant="contained"
-                                    onClick={() => handlePaymentCheckout("monthly")}
-                                    disabled={!isMonthlyButtonLoading && isYearlyButtonLoading}
-                                >
-                                    払う
-                                </LoadingButton>
-                            </CardActions>
-                        </Card>
-                    </Grid>
-                </Grid>
+                </>
             )}
             {loadingStatus === LoadingStatus.LOADED && token[0] !== undefined && paymentStatus !== PaymentStatus.UNPAID && (
                 <>
