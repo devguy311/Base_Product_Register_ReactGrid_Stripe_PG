@@ -68,11 +68,6 @@ const ProductDescriptionPanel = (props: any) => {
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => {
-            if (prevActiveStep === 0) {
-                itemList.forEach((item, idx) => {
-                    if (isNaN(increRateArray[idx])) increRateArray[idx] = 0;
-                })
-            }
             if (prevActiveStep === 1) {
                 setProductDescriptionToCopy((prevText) => {
                     prevText = `色展開\t${colorList.join("\t")}\n\nサイズ\t${sizeList.join("\t")}\n\nサイズ(cm)`;
@@ -131,6 +126,9 @@ const ProductDescriptionPanel = (props: any) => {
         if (newValue.length < 21) {
             setItemList(newValue);
             setItemSizes(init2DArray(sizeList.length, newValue.length));
+            newValue.forEach((val, idx) => {
+                if (isNaN(increRateArray[idx])) increRateArray[idx] = 0;
+            })
         }
     };
 
