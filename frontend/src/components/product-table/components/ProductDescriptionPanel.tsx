@@ -7,7 +7,10 @@ import {
     ButtonGroup,
     CircularProgress,
     FormHelperText,
+    Input,
+    InputAdornment,
     MenuItem,
+    IconButton,
     Select,
     SelectChangeEvent,
     Step,
@@ -18,12 +21,13 @@ import {
     Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { ChangeEvent, SyntheticEvent, useEffect, useState } from "react";
+import { ChangeEvent, SyntheticEvent, useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 import { Size, SavingStatus, ProductVariation } from "../types/index.d";
 import useToken from "../../../hooks/useToken";
 import useAuthorizationCode from "../../../hooks/useAuthorizationCode";
+import { AddCircle } from "@mui/icons-material";
 
 const defaultSizeList = [Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XL2, Size.XL3, Size.XL4, Size.XL5, Size.XL6];
 
@@ -60,9 +64,15 @@ const ProductDescriptionPanel = (props: any) => {
     const [identifier, setIdentifier] = useState("");
     const [savingStatus, setSavingStatus] = useState(SavingStatus.NOT_SAVING);
     const [botAuthToken, setBothAuthToken] = useState(localStorage.getItem("bot_auth_token"));
+    const [increRateArray, setIncreRateArray] = useState<number[]>([]);
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => {
+            if (prevActiveStep === 0) {
+                itemList.forEach((item, idx) => {
+                    if (isNaN(increRateArray[idx])) increRateArray[idx] = 0;
+                })
+            }
             if (prevActiveStep === 1) {
                 setProductDescriptionToCopy((prevText) => {
                     prevText = `色展開\t${colorList.join("\t")}\n\nサイズ\t${sizeList.join("\t")}\n\nサイズ(cm)`;
@@ -131,19 +141,23 @@ const ProductDescriptionPanel = (props: any) => {
         }
     };
 
-    const handleSizeAutoIncrement = (index: number, increaseRate: number) => {
-        setItemSizes(
-            itemSizes.map((t, idx) => {
-                if (idx <= index) return t.slice();
-                return t.map((t, jdx) =>
-                    itemSizes[index][jdx] === undefined || itemSizes[index][jdx] <= 0 ? t : itemSizes[index][jdx] + increaseRate * (idx - index)
-                );
-            })
-        );
+    const increRateChanged = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>, index: number) => {
+        const value = Number(e.target.value);
+        const newArray = [...increRateArray];
+        newArray[index] = isNaN(value) ? 0 : value;
+        setIncreRateArray(newArray);
+    }
+
+    const handleSizeAutoIncrement = (index: number, incrementRate: number) => {
+        let newArray = [...itemSizes];
+        sizeList.map((val, idx) => {
+            if (idx > 0) newArray[idx][index] = Number((newArray[0][index] + incrementRate * idx).toFixed(1));
+        })
+        setItemSizes(newArray);
     };
 
     const handleStockAutoFillValue = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setStockAutoFillValue(parseInt(e.target.value));
+        setStockAutoFillValue(isNaN(Number(e.target.value)) ? 0 : Number(e.target.value));
     };
 
     const handleStockAutoFill = () => {
@@ -155,25 +169,17 @@ const ProductDescriptionPanel = (props: any) => {
             })
         );
     };
-    const handleItemSize = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const split = e.target.id.split("_");
-        const sizeIndex = parseInt(split[1]);
-        const itemIndex = parseInt(split[2]);
-        const newValue = parseInt(e.target.value);
-
-        const newItemSizes = itemSizes.slice();
-        newItemSizes[sizeIndex][itemIndex] = isNaN(newValue) ? 0 : newValue;
+    const handleItemSize = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>, idx: number, jdx: number) => {
+        const value = Number(e.target.value);
+        let newItemSizes = [...itemSizes];
+        newItemSizes[idx][jdx] = isNaN(value) ? 0 : value;
         setItemSizes(newItemSizes);
     };
 
-    const handleItemStocks = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const split = e.target.id.split("_");
-        const sizeIndex = parseInt(split[1]);
-        const colorIndex = parseInt(split[2]);
-        const newValue = parseInt(e.target.value);
-
-        const newItemStocks = itemStocks.slice();
-        newItemStocks[sizeIndex][colorIndex] = isNaN(newValue) ? 0 : newValue;
+    const handleItemStocks = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>, idx: number, jdx: number) => {
+        const newValue = Number(e.target.value);
+        const newItemStocks = [...itemStocks];
+        newItemStocks[jdx][idx] = isNaN(newValue) ? 0 : newValue;
         setItemStocks(newItemStocks);
     };
 
@@ -186,11 +192,11 @@ const ProductDescriptionPanel = (props: any) => {
     };
 
     const handlePrice = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setPrice(parseInt(e.target.value));
+        setPrice(isNaN(Number(e.target.value)) ? 0 : Number(e.target.value));
     };
 
     const handleItemStock = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setItemStock(parseInt(e.target.value));
+        setItemStock(isNaN(Number(e.target.value)) ? 0 : Number(e.target.value));
     };
 
     const handleIdentifier = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -363,31 +369,49 @@ const ProductDescriptionPanel = (props: any) => {
                                     <Grid item xs={12}>
                                         <strong>サイズ(cm)</strong>
                                     </Grid>
+                                    <Grid item display={"flex"} xs={12}>
+                                        <Grid item xs={1} sx={{ pt: 1, pl: 2 }}>+</Grid>
+                                        <Grid item display={"flex"} xs={11}>
+                                            {
+                                                itemList.map((item, idx) => (
+                                                    <>
+                                                        <TextField
+                                                            key={idx}
+                                                            size="small"
+                                                            sx={{ mb: 1, width: itemList.length < 6 ? "223px" : "100vh", pr: 1 }}
+                                                            value={increRateArray[idx].toString()}
+                                                            onChange={(event) => increRateChanged(event, idx)}
+                                                            inputProps={{ step: "any", type: "number", min: "0" }}
+                                                            InputProps={{
+                                                                endAdornment:
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton aria-label="add" onClick={() => handleSizeAutoIncrement(idx, increRateArray[idx])} sx={{ mr: -2 }}>
+                                                                            <AddCircle color="primary" />
+                                                                        </IconButton>
+                                                                    </InputAdornment>
+                                                            }}
+                                                        />
+                                                    </>
+                                                ))
+                                            }
+                                        </Grid>
+                                    </Grid>
                                     {sizeList.map((size, idx) => (
                                         <Grid key={idx} item display={"flex"} xs={12}>
                                             <Grid item xs={1} sx={{ pt: 1, pl: 2 }}>
                                                 {size}
                                             </Grid>
 
-                                            <Grid item xs={1} sx={{ pt: 1 }}>
-                                                <ButtonGroup size="small" variant="text" area-aria-label="auto-increment-helper">
-                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 1)}>+1</Button>
-                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 2)}>+2</Button>
-                                                    <Button onClick={() => handleSizeAutoIncrement(idx, 3)}>+3</Button>
-                                                </ButtonGroup>
-                                            </Grid>
-
-                                            <Grid item display={"flex"} xs={10}>
+                                            <Grid item display={"flex"} xs={11}>
                                                 {itemList.map((item, jdx) => (
                                                     <TextField
                                                         key={jdx}
-                                                        id={"item_" + idx + "_" + jdx}
                                                         size="small"
                                                         sx={{ mb: 1, mr: 1 }}
-                                                        value={itemSizes[idx][jdx]}
+                                                        value={itemSizes[idx][jdx].toString()}
                                                         label={item}
-                                                        type="number"
-                                                        onChange={handleItemSize}
+                                                        inputProps={{ step: "any", type: "number", min: "0" }}
+                                                        onChange={(e) => handleItemSize(e, idx, jdx)}
                                                     />
                                                 ))}
                                             </Grid>
@@ -402,9 +426,9 @@ const ProductDescriptionPanel = (props: any) => {
                                         <strong>バリエーション</strong>
                                         <TextField
                                             size="small"
-                                            value={stockAutoFillValue}
+                                            value={stockAutoFillValue.toString()}
                                             sx={{ pl: 1, pr: 1 }}
-                                            type="number"
+                                            inputProps={{ step: "any", type: "number", min: "0" }}
                                             onChange={handleStockAutoFillValue}
                                         />
                                         <Button onClick={handleStockAutoFill}>一括入力</Button>
@@ -415,13 +439,12 @@ const ProductDescriptionPanel = (props: any) => {
                                                 {colorList.map((color, jdx) => (
                                                     <TextField
                                                         key={jdx}
-                                                        id={"color_" + jdx + "_" + idx}
                                                         size="small"
                                                         sx={{ mb: 1, mr: 1 }}
-                                                        value={itemStocks[jdx][idx]}
+                                                        value={itemStocks[jdx][idx].toString()}
                                                         label={color + "　" + size}
-                                                        type="number"
-                                                        onChange={handleItemStocks}
+                                                        inputProps={{ step: "any", type: "number", min: "0" }}
+                                                        onChange={(e) => handleItemStocks(e, idx, jdx)}
                                                     />
                                                 ))}
                                             </Grid>
@@ -469,9 +492,11 @@ const ProductDescriptionPanel = (props: any) => {
                                 <strong>必須設定</strong>
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField size="small" sx={{ mr: 1 }} value={price} label="価格(税込)" type="number" onChange={handlePrice} />
+                                <TextField size="small" sx={{ mr: 1 }} value={price.toString()} label="価格(税込)"
+                                    inputProps={{ step: "any", type: "number", min: "0" }} onChange={handlePrice} />
                                 {productVariations.length === 0 && (
-                                    <TextField size="small" sx={{ mr: 1 }} value={itemStock} label="在庫数" type="number" onChange={handleItemStock} />
+                                    <TextField size="small" sx={{ mr: 1 }} value={itemStock.toString()} label="在庫数"
+                                        inputProps={{ step: "any", type: "number", min: "0" }} type="number" onChange={handleItemStock} />
                                 )}
                                 <TextField size="small" value={identifier} label="商品コード" onChange={handleIdentifier} />
                             </Grid>
